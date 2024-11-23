@@ -1,0 +1,61 @@
+---
+import ProyectItem from "./ProyectItem.astro"
+const Proyectos = [
+  {
+    Name: "Vscode Extension: AVR Make Action",
+    Tools: ["Typescript", "C"],
+    Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
+    GitLink: ""
+  },
+  {
+    Name: "Vscode Extension: AVR Register Configurator",
+    Tools: ["Typescript", "C"],
+    Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
+    GitLink: ""
+  },
+  {
+    Name: "Embedded-Backend: STM32 OTA Server",
+    Tools: ["Typescript","AWS", "C"],
+    Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
+    GitLink: ""
+
+  },
+  {
+    Name: "Embedded-Linux: CrossFit - Student Register Server & Application",
+    Tools: ["QT5", "C++","MYSQL"],
+    Description:"dpfvñdf,vñldf,vñdlf,vñdf,lv",
+    GitLink: ""
+
+  },
+  {
+    Name: "FullStack: Dance Academy Platform",
+    Tools: ["Next JS","Mysql","Tailwind"],
+    Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
+    GitLink: ""
+
+  },
+  {
+    Name: "Embedded: LVGL 3D Printer Display",
+    Tools: ["C"],
+    Description:"",
+    GitLink: ""
+
+  },
+  {
+    Name: "Backend: Online C Editor & Compiler",
+    Tools: ["Tailwind CSS","Node JS", "C"],
+    Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
+    GitLink: ""
+  }
+]
+---
+
+<ol class="relative mt-16 w-[45%]">
+  {
+    Proyectos.map((experience) => (
+      <li class="">
+        <ProyectItem {...experience} />
+      </li>
+    ))
+  }
+</ol>
