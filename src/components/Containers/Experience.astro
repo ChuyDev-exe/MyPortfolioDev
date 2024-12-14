@@ -1,0 +1,33 @@
+---
+import ExperienceItem from "../Items/ExperienceItem.astro"
+const EXPERIENCE = [
+  {
+    date: "Actualmente...",
+    title: "Freelance Fullstack & Embedded Software Engineer",
+    company: "AdagIO",
+    description:"Doy servicios de construcciones de aplicaciones Web, creo contenido en mi blog acerca de herramientas creadas por mi para resolver problematicas en el area de embebidos e imparto cursos en la plataforma de udemy de sistemas embebidos",
+  },
+  {
+    date: "Noviembre 2024",
+    title: "Software Engineer",
+    company: "Continental R&D Guadalajara",
+    description: "Encargado de implementacion & Correccion de pruebas unitarias & mejoras en coverturas de codigo para modulos de TBC, Encargado de Realizar release de software para Variantes de TBC y BMC para modulos de Stellantis. Integrador de Base de Datos y Modelo para modulo BCM y DMM",
+  },
+  {
+    date: "Abril 2022",
+    title: "Software Engineer Trainee",
+    company: "Continental R&D Guadalajara",
+    description: "Implementacion de Software Validation Test & Unit Test para modulos de TBC de Stellantis. Creacion de Proyecto para Control de Ventanas y Puertas.",
+  },
+]
+---
+
+<ol class="relative mt-16 w-[55%] flex items-center justify-center flex-col">
+  {
+    EXPERIENCE.map((experience) => (
+      <li class="flex">
+        <ExperienceItem {...experience} />
+      </li>
+    ))
+  }
+</ol>

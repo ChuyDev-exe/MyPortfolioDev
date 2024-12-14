@@ -1,0 +1,106 @@
+---
+import NavItem from "../components/NavItem.astro";
+import BlogLayout from "../layouts/BlogLayout.astro";
+import { TagTopic } from "../components/Tools/Tags";
+---
+
+<BlogLayout title="Blog Dev">
+    <nav class="flex gap-5 flex-row justify-center w-full my-10">
+        <NavItem title="Experience" href="#Experiencia" />
+        <NavItem title="Projects" />
+        <NavItem title="About Me" />
+        <NavItem title="Blog" />
+    </nav>
+
+    <div class="flex w-full items-center justify-center flex-col mb-[5rem]">
+        <section class="h-[500px] flex flex-col w-[80%]">
+            <div class="py-3 px-4 mx-auto max-w-screen-xl text-center lg:py-10">
+                <h1
+                    class="mb-2 text-4xl font-extrabold tracking-tight leading-none md:text-5xl lg:text-8xl text-white"
+                >
+                    Find your Dev problem here
+                </h1>
+                <h1
+                    class="mb-10 text-2xl font-extrabold tracking-tight leading-none md:text-4xl lg:text-6xl text-white"
+                >
+                    Was my problem too
+                </h1>
+                <p
+                    class=" text-lg font-normal text-gray-500 lg:text-xl sm:px-16 lg:px-48 dark:text-gray-400"
+                >
+                    Find my Tech Tips & Clicks for <br />
+                    VsCode, Linux & Microcontrollers Problematics
+                </p>
+            </div>
+            <a
+                href="/Blog/Posts"
+                class="mr-[200px] self-end text-white hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-lg px-7 py-4 text-center inline-flex items-center bg-blue-600 dark:hover:bg-51E4B8 dark:focus:ring-blue-800"
+            >
+                Let's check Post
+                <svg
+                    class="rtl:rotate-180 w-3.5 h-3.5 ms-2"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 14 10"
+                >
+                    <path
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M1 5h12m0 0L9 1m4 4L9 9"></path>
+                </svg>
+            </a>
+        </section>
+    </div>
+
+    <div class="flex w-full items-center justify-center flex-col gap-[30px]">
+        <h1
+            class="font-extrabold tracking-tight leading-none text-5xl text-white"
+        >
+            Popular Posts
+        </h1>
+
+        <div class="grid grid-cols-3 grid-rows-3 gap-4 w-[80%] h-[800px]">
+            <div
+                class="border-solid border border-sky-500 row-span-2 rounded-md relative"
+            >
+                <TagTopic type="qt" />
+            </div>
+            <div class="border-solid border border-sky-500 rounded-md relative">
+                <TagTopic type="bbb" />
+            </div>
+            <div
+                class="border-solid border border-sky-500 col-start-2 row-start-2 rounded-md relative"
+            >
+                <TagTopic type="raspberry" />
+            </div>
+            <div
+                class="border-solid border border-sky-500 row-span-2 col-start-3 row-start-1 rounded-md relative"
+            >
+                <TagTopic type="linux" />
+            </div>
+            <div
+                class="border-solid border border-sky-500 col-span-2 col-start-2 row-start-3 rounded-md relative"
+            >
+                <TagTopic type="vscode" />
+            </div>
+            <div
+                class="border-solid border border-sky-500 col-start-1 row-start-3 rounded-md relative"
+            >
+                <TagTopic type="vscode" />
+            </div>
+        </div>
+
+        <a
+            href="/"
+            class="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-lg px-6 py-3.5 text-center me-2 mb-2"
+            >More Posts</a
+        >
+    </div>
+</BlogLayout>
+
+<style>
+
+</style>

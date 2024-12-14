@@ -52,6 +52,8 @@ h1{
   display:flex;
   flex-direction:row;
 }
+
+@media (min-width: 1024px) { 
 .Nom:nth-child(1){
   margin-left:104px;
 }
@@ -60,47 +62,78 @@ h1{
 }
 
 
+}
+
+
+@media (max-width: 640px) { 
+.Nom:nth-child(1){
+  margin-left:75px;
+  
+}
+
+.Nom:nth-child(2){
+  margin-top:-75px;
+}
+
+
+}
+
+
+@media (min-width: 640px) { 
+.Nom:nth-child(1){
+  margin-left:75px;
+}
+
+.Nom:nth-child(2){
+  margin-top:-80px;
+}
+
+}
+
+
+
 .Nom:nth-child(1) h1:nth-child(1){
    
-}
-.Nom:nth-child(1) h1:nth-child(2){
-    margin-top:-15px;
+  }
+  .Nom:nth-child(1) h1:nth-child(2){
+      margin-top:-15px;
+      margin-left:-5px;
+  }
+  .Nom:nth-child(1) h1:nth-child(3){
+      margin-top:-25px;
+      margin-left:-5px;
+  }
+  .Nom:nth-child(1) h1:nth-child(4){
+  margin-top:-35px;
+      margin-left:-5px;
+  }
+  .Nom:nth-child(1) h1:nth-child(5){
+  margin-top:-45px;
+      margin-left:-5px;
+  }
+  
+  
+  .Nom:nth-child(2) h1:nth-child(1){
+     margin-top:-18px;
     margin-left:-5px;
-}
-.Nom:nth-child(1) h1:nth-child(3){
-    margin-top:-25px;
-    margin-left:-5px;
-}
-.Nom:nth-child(1) h1:nth-child(4){
-margin-top:-35px;
-    margin-left:-5px;
-}
-.Nom:nth-child(1) h1:nth-child(5){
-margin-top:-45px;
-    margin-left:-5px;
-}
+  }
+  .Nom:nth-child(2) h1:nth-child(2){
+      margin-top:-25px;
+      margin-left:-5px;
+  }
+  .Nom:nth-child(2) h1:nth-child(3){
+      margin-top:-35px;
+      margin-left:0px;
+  }
+  .Nom:nth-child(2) h1:nth-child(4){
+  margin-top:-45px;
+      margin-left:-5px;
+  }
+  .Nom:nth-child(2) h1:nth-child(5){
+  margin-top:-55px;
+      margin-left:-5px;
+  }
 
-
-.Nom:nth-child(2) h1:nth-child(1){
-   margin-top:-18px;
-  margin-left:-5px;
-}
-.Nom:nth-child(2) h1:nth-child(2){
-    margin-top:-25px;
-    margin-left:-5px;
-}
-.Nom:nth-child(2) h1:nth-child(3){
-    margin-top:-35px;
-    margin-left:0px;
-}
-.Nom:nth-child(2) h1:nth-child(4){
-margin-top:-45px;
-    margin-left:-5px;
-}
-.Nom:nth-child(2) h1:nth-child(5){
-margin-top:-55px;
-    margin-left:-5px;
-}
 
 .glitch {
   font-family: 'Allan', cursive;
@@ -127,8 +160,13 @@ margin-top:-55px;
   animation: anim2 1s infinite linear alternate-reverse;
 }
 
+
+
+
+ 
+
 @media (max-width: 991.98px) {
-  .glitch { font-size: 75px; }
+  .glitch { font-size: 120px; }
 }
 @media (min-width: 992px) {
   .glitch { font-size: 150px; }

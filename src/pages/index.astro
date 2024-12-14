@@ -1,72 +1,59 @@
 ---
-import Logo from '../components/Logo.astro';
-import NavItem from '../components/NavItem.astro';
-import Layout from '../layouts/Layout.astro';
-import Experience from '../components/Experience.astro';
-import Proyects from '../components/Proyects.astro';
+import Logo from "../components/Global/Logo.astro";
+import NavItem from "../components/NavItem.astro";
+import Layout from "../layouts/Layout.astro";
+import Experience from "../components/Containers/Experience.astro";
+import Proyects from "../components/Containers/Proyects.astro";
 ---
-<Layout title="Welcome to Astro.">
-	<nav class="flex gap-5 flex-row justify-center w-full mt-7">
-		<NavItem title="Experience" href="#Experiencia"/>
-		<NavItem title="Projects"/>
-		<NavItem title="About Me"/>		
+
+<Layout title="Jesus Velez Soto">
+	<nav class="flex gap-5 flex-row justify-center w-full my-10">
+		<NavItem title="Experience" href="#Experiencia" />
+		<NavItem title="Projects" href="#Projects"/>
+		<NavItem title="Blog" href="/Blog"/>
 	</nav>
 
-	<Logo/>
+	<Logo />
 	<div class="flex items-center w-full flex justify-center mb-10">
 		<span class="relative inline-flex overflow-hidden rounded-full p-[1px]">
-		  <span
-			class="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#51E4B8_0%,#21554E_50%,#51E4B8_100%)]"
-		  ></span>
-		  <div class="inline-flex items-center justify-center w-full px-3 py-1 text-lg text-green-800 bg-green-100 rounded-full cursor-pointer dark:bg-gray-800 dark:text-white/80 backdrop-blur-3xl whitespace-nowrap">
-			Open to Work
-		  </div>
+			<span
+				class="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#51E4B8_0%,#21554E_50%,#51E4B8_100%)]"
+			></span>
+			<a href="https://www.linkedin.com/in/jesus-velez-soto-28ab11156/"
+				class="inline-flex items-center justify-center w-full px-3 py-1 text-lg text-green-800 bg-green-100 rounded-full cursor-pointer dark:bg-gray-800 dark:text-white/80 backdrop-blur-3xl whitespace-nowrap"
+			>
+				Open to Work
+			</a>
 		</span>
-	</div>	
-	<section class="flex items-center w-full justify-center mb-[300px] ">
-		<p class="text-2xl text-white mt-10">
-			3 años de experiencia como <span class="text-[#51E4B8]"> Ingeniero de Software, <br>
-			Software Blogger & Emprendedor </span> en Jalisco, Mexico. 🇲🇽 <br>
-			Especializado en Aplicaciones Web y Dispositivos Embebidos con Linux. 
+	</div>
+	<section class="flex items-center w-full justify-center mb-[300px]">
+		<p class="text-2xl max-sm:text-base text-white mt-10 text-wrap w-[70%] md:w-[60%]">
+			3 años de experiencia como <span class="text-[#51E4B8]">
+				Ingeniero de Software, 
+				Software Blogger & Emprendedor
+			</span> en Jalisco, Mexico. 🇲🇽 
+			Especializado en Aplicaciones Web y Dispositivos Embebidos con Linux.
 		</p>
 	</section>
-	<div class="w-full flex items-center justify-center flex-col mt-[200px]" id="Experiencia">
-		<h1 class="text-5xl font-semibold text-white my-5">Experiencia Profesional</h1>
-		<Experience/>
+	<div
+		class="w-full flex items-center justify-center flex-col mt-[200px]"
+		id="Experiencia"
+	>
+		<h1 class="text-5xl font-semibold text-white my-5">
+			Experiencia
+		</h1>
+		<Experience />
 	</div>
 
-	<div class="w-full flex items-center justify-center flex-col mt-[200px]" id="Experiencia">
+	<div
+		class="w-full flex items-center justify-center flex-col mt-[200px]"
+		id="Projects"
+	>
 		<h1 class="text-5xl font-semibold text-white my-5">Proyectos</h1>
-		<Proyects/>
+		<Proyects />
 	</div>
 </Layout>
 
 <style>
 
-html {
-        font-family: "Onest Variable", system-ui, sans-serif;
-        scroll-behavior: smooth;
-      }
-
-      body {
-		background-color: #050d15;
-
-        overscroll-behavior: none;
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
-        }
-      }
-
-      @media (prefers-color-scheme: dark) {
-        body {
-          color: rgba(255, 255, 255, 0.9);
-        }
-      }
-	body{
-		background-color: #050d15;
-		font-family: "Onest Variable", system-ui, sans-serif;
-	}
 </style>

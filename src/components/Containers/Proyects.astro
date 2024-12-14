@@ -1,5 +1,5 @@
 ---
-import ProyectItem from "./ProyectItem.astro"
+import ProyectItem from "../Items/ProyectItem.astro"
 const Proyectos = [
   {
     Name: "Vscode Extension: AVR Make Action",
@@ -15,21 +15,21 @@ const Proyectos = [
   },
   {
     Name: "Embedded-Backend: STM32 OTA Server",
-    Tools: ["Typescript","AWS", "C"],
+    Tools: ["Typescript","AWS", "Cpp"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
     GitLink: ""
 
   },
   {
     Name: "Embedded-Linux: CrossFit - Student Register Server & Application",
-    Tools: ["QT5", "C++","MYSQL"],
+    Tools: ["Qt", "Cpp","MySQL"],
     Description:"dpfvñdf,vñldf,vñdlf,vñdf,lv",
     GitLink: ""
 
   },
   {
     Name: "FullStack: Dance Academy Platform",
-    Tools: ["Next JS","Mysql","Tailwind"],
+    Tools: ["NextJs","MySQL","TailWind"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
     GitLink: ""
 
@@ -37,25 +37,54 @@ const Proyectos = [
   {
     Name: "Embedded: LVGL 3D Printer Display",
     Tools: ["C"],
-    Description:"",
+    Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
     GitLink: ""
-
   },
   {
     Name: "Backend: Online C Editor & Compiler",
-    Tools: ["Tailwind CSS","Node JS", "C"],
+    Tools: ["TailWind","Node", "C"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
     GitLink: ""
   }
 ]
 ---
 
-<ol class="relative mt-16 w-[45%]">
+<ol class="relative mt-16 sm:w-[45%] max-sm: w-[70%] flex flex-col gap-12">
   {
     Proyectos.map((experience) => (
-      <li class="">
+      <li class="box">
         <ProyectItem {...experience} />
       </li>
     ))
   }
 </ol>
+
+<style>
+  .box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid #0000;
+  border-radius: 12px;
+  background: linear-gradient(#131219, #131219) padding-box, linear-gradient(
+        var(--angle),
+        #070707,
+        #51E4B8
+      ) border-box;
+  animation: 5s rotate linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+</style>
