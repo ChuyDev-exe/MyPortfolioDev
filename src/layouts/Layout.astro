@@ -3,6 +3,7 @@ interface Props {
 	title: string;
 }
 
+const currentYear = new Date().getFullYear();
 const { title } = Astro.props;
 // Supports weights 100-900
 import "@fontsource-variable/onest";
@@ -23,8 +24,62 @@ import "@fontsource-variable/onest";
 		<title>{title}</title>
 	</head>
 	<body>
-		
 		<slot />
+		<footer class="py-[5rem] items-center flex max-sm:flex-col md:justify-between max-sm:justify-center max-sm:gap-10 text-slate-50 flex-wrap">
+			<div class="md:ml-20">
+				<h1>Designed & Developed by</h1>
+				<h1>Jesus Velez 🤟🏻 {currentYear}</h1>
+			</div>
+			<div class="md:mr-20 flex md:gap-10 max-sm:gap-6 max-sm:wrap max-sm:flex-col">
+				<a
+					href"
+					"
+					class="cursor-pointer text-lg relative px-2 flex justify-center items-center
+				before:content-[''] before:absolute before:top-[85%] before:left-1/2
+				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
+				hover:before:bg-[#51E4B8] hover:before:w-full before:transition-all before:duration-300 before:ease-in-out"
+				>
+					EMAIL
+				</a>
+
+				<a
+					href"
+					"
+					class="cursor-pointer text-lg relative px-2 flex justify-center items-center
+								  before:content-[''] before:absolute before:top-[85%] before:left-1/2
+								  before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
+								  hover:before:bg-[#51E4B8] hover:before:w-full before:transition-all before:duration-300 before:ease-in-out"
+					>INSTAGRAM</a
+				>
+				<a
+					href"
+					"
+					class="cursor-pointer text-lg relative px-2 flex justify-center items-center
+				before:content-[''] before:absolute before:top-[85%] before:left-1/2
+				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
+				hover:before:bg-[#51E4B8] hover:before:w-full before:transition-all before:duration-300 before:ease-in-out"
+					>CODEPEN</a
+				>
+				<a
+					href"
+					"
+					class="cursor-pointer text-lg relative px-2 flex justify-center items-center
+				before:content-[''] before:absolute before:top-[85%] before:left-1/2
+				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
+				hover:before:bg-[#51E4B8] hover:before:w-full before:transition-all before:duration-300 before:ease-in-out"
+					>GITHUB</a
+				>
+				<a
+					hhref"
+					"
+					class="cursor-pointer text-lg relative px-2 flex justify-center items-center
+				before:content-[''] before:absolute before:top-[85%] before:left-1/2
+				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
+				hover:before:bg-[#51E4B8] hover:before:w-full before:transition-all before:duration-300 before:ease-in-out"
+					>LINKEDIN</a
+				>
+			</div>
+		</footer>
 	</body>
 </html>
 <style>
