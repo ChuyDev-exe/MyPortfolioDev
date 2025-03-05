@@ -16,7 +16,8 @@ import {
   Docker, 
   Android, 
   Microsoft,
-  LVGL
+  LVGL,
+Figma
 } from '../Tools/Icons';
 
 interface Props {
@@ -27,9 +28,10 @@ interface Props {
   Description: string;
   PrevLink?: string;
   GitLink: string;
+  FigmaLink?: string;
 }
 
-const { imgsource, Name, Tools, Description, PrevLink, GitLink,Type } = Astro.props;
+const { imgsource, Name, Tools, Description, PrevLink, GitLink,Type,FigmaLink } = Astro.props;
 ---
 
 <div class="py-3 bg-[#050d15]">
@@ -58,15 +60,21 @@ const { imgsource, Name, Tools, Description, PrevLink, GitLink,Type } = Astro.pr
       ))}
     </div>
     <p class="text-base text-neutral-400 ">{Description}</p>
-    <div class="flex gap-4 mt-3">
+    <div class="flex gap-2 mt-3">
       {PrevLink && (
         <a href={PrevLink}     class="py-1 px-3 rounded-md border border-slate-300/50 text-slate-100/50 hover:text-slate-100 hover:border-slate-300 transition-colors cursor-pointer">
           Preview
         </a>
       )}
-      <a href={GitLink} class="py-1 px-3 rounded-md border border-slate-300/50 text-slate-100/50 hover:text-slate-100 hover:border-slate-300  cursor-pointer flex flex-row gap-2 items-center justify-center">
-        Github <Github />
+
+      <a href={GitLink} class="py-2 px-2 rounded-md border border-slate-300/50 text-slate-100/50 hover:text-slate-100 hover:border-slate-300  cursor-pointer flex flex-row gap-2 items-center justify-center">
+        <Github />
       </a>
+      {FigmaLink && (
+        <a href={FigmaLink} class="py-1 px-2 flex items-center justify-center rounded-md border border-slate-300/50 text-slate-100/50 hover:text-slate-100 hover:border-slate-300 transition-colors cursor-pointer">
+          <Figma />
+        </a>
+      )}
     </div>
   </div>
 </div>
