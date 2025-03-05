@@ -15,11 +15,13 @@ import {
   VisualStudioCode, 
   Docker, 
   Android, 
-  Microsoft 
+  Microsoft,
+  LVGL
 } from '../Tools/Icons';
 
 interface Props {
   imgsource?: string;
+  Type: string;
   Name: string;
   Tools: string[];
   Description: string;
@@ -27,27 +29,28 @@ interface Props {
   GitLink: string;
 }
 
-const { imgsource, Name, Tools, Description, PrevLink, GitLink } = Astro.props;
+const { imgsource, Name, Tools, Description, PrevLink, GitLink,Type } = Astro.props;
 ---
 
-<div class="py-3">
+<div class="py-3 bg-[#050d15]">
   {imgsource && <img src={imgsource} class="" alt={`${Name} preview`} />}
-  <div class="flex flex-col">
-    <h1 class="text-xl text-[#51E4B8]">{Name}</h1>
+  <div class="flex flex-col gap-2">
+    <h1 class="text-xl text-[#51E4B8] uppercase">{Name}</h1>
+    <h1 class="text-sm text-[#f4faf8]">{Type}</h1>
     <div class="flex gap-2">
       {Tools.map((Tool) => (
         <span
           class="rounded-xl py-1 px-1 text-base text-slate-100 flex gap-2 items-center justify-center"
         >
-          {Tool === 'MySQL' && <MySQL />}
-          {Tool === 'C' && <Cpp/>}
-          {Tool === 'Cpp' && <Cpp/>}
-          {Tool === 'TailWind' && <TailwindCSS/>}
-          {Tool === 'NextJs' && <Nextjs/>}
-          {Tool === 'Node' && <Nodejs/>}
-          {Tool === 'AWS' && <AWS/>}
-          {Tool === 'Typescript' && <TypeScript/>}
-          {Tool === 'Qt' && <Qt/>}
+          {Tool === 'MySQL' && <MySQL size='1.6em'/>}
+          {Tool === 'C' && <Cpp  size='1.6em'/>}
+          {Tool === 'Cpp' && <Cpp  size='1.6em'/>}
+          {Tool === 'TailWind' && <TailwindCSS  size='1.6em'/>}
+          {Tool === 'NextJs' && <Nextjs  size='1.6em'/>}
+          {Tool === 'Node' && <Nodejs  size='1.6em'/>}
+          {Tool === 'AWS' && <AWS  size='1.6em'/>}
+          {Tool === 'Typescript' && <TypeScript size='1.6em' />}
+          {Tool === 'Qt' && <LVGL size='1.6em' />}
 
 
 
@@ -57,12 +60,12 @@ const { imgsource, Name, Tools, Description, PrevLink, GitLink } = Astro.props;
     <p class="text-base text-neutral-400 ">{Description}</p>
     <div class="flex gap-4 mt-3">
       {PrevLink && (
-        <a href={PrevLink}     class="py-1 px-3 rounded-full border border-cyan-800 text-cyan-800 hover:bg-cyan-800 hover:text-white transition-colors cursor-pointer">
+        <a href={PrevLink}     class="py-1 px-3 rounded-md border border-slate-300/50 text-slate-100/50 hover:text-slate-100 hover:border-slate-300 transition-colors cursor-pointer">
           Preview
         </a>
       )}
-      <a href={GitLink} class="py-1 px-3 rounded-xl border border-slate-300 text-slate-300 cursor-pointer flex flex-row gap-2 items-center justify-center">
-        Github <Github/>
+      <a href={GitLink} class="py-1 px-3 rounded-md border border-slate-300/50 text-slate-100/50 hover:text-slate-100 hover:border-slate-300  cursor-pointer flex flex-row gap-2 items-center justify-center">
+        Github <Github />
       </a>
     </div>
   </div>

@@ -2,46 +2,55 @@
 import ProyectItem from "../Items/ProyectItem.astro"
 const Proyectos = [
   {
-    Name: "Vscode Extension: AVR Make Action",
+    Name: "AVR Make Action",
+    Type: "Vscode Extension",
     Tools: ["Typescript", "C"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
-    GitLink: ""
+    GitLink: "",
+    PrevLink:"wefwe"
   },
   {
-    Name: "Vscode Extension: AVR Register Configurator",
+    Name: "AVR Register Configurator",
+    Type: "Vscode Extension",
     Tools: ["Typescript", "C"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
-    GitLink: ""
+    GitLink: "",
+    PrevLink:"fwefwef"
   },
   {
-    Name: "Embedded-Backend: STM32 OTA Server",
+    Name: "STM32 OTA Server",
+    Type: "Embedded-Backend",
     Tools: ["Typescript","AWS", "Cpp"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
     GitLink: ""
 
   },
   {
-    Name: "Embedded-Linux: CrossFit - Student Register Server & Application",
+    Name: "CrossFit - Student Register Server & Application",
+    Type: "Embedded Linux",
     Tools: ["Qt", "Cpp","MySQL"],
     Description:"dpfvñdf,vñldf,vñdlf,vñdf,lv",
     GitLink: ""
 
   },
   {
-    Name: "FullStack: Dance Academy Platform",
+    Name: "Dance Academy Platform",
+    Type: "FullStack",
     Tools: ["NextJs","MySQL","TailWind"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
     GitLink: ""
 
   },
   {
-    Name: "Embedded: LVGL 3D Printer Display",
+    Name: "LVGL 3D Printer Display",
+    Type: "Embedded",
     Tools: ["C"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
     GitLink: ""
   },
   {
-    Name: "Backend: Online C Editor & Compiler",
+    Name: "Online C Editor & Compiler",
+    Type: "Backend",
     Tools: ["TailWind","Node", "C"],
     Description:"Responsable de la plataforma, componentes y utilidades para la creación y desarrollo de aplicaciones web. Mejo",
     GitLink: ""
@@ -49,7 +58,7 @@ const Proyectos = [
 ]
 ---
 
-<ol class="relative mt-16 sm:w-[45%] max-sm: w-[70%] flex flex-col gap-12">
+<ol class="relative mt-16 sm:w-[75%] max-sm:w-[70%] grid grid-cols-3 gap-12">
   {
     Proyectos.map((experience) => (
       <li class="box">
@@ -67,7 +76,7 @@ const Proyectos = [
   padding: 12px;
   border: 2px solid #0000;
   border-radius: 12px;
-  background: linear-gradient(#131219, #131219) padding-box, linear-gradient(
+  background: linear-gradient(#050d15, #050d15) padding-box, linear-gradient(
         var(--angle),
         #070707,
         #51E4B8

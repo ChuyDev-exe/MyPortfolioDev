@@ -4,6 +4,7 @@ import NavItem from "../components/NavItem.astro";
 import Layout from "../layouts/Layout.astro";
 import Experience from "../components/Containers/Experience.astro";
 import Proyects from "../components/Containers/Proyects.astro";
+import TabsComponent from "../components/Items/Skill";
 ---
 
 <Layout title="Jesus Velez Soto">
@@ -44,7 +45,16 @@ import Proyects from "../components/Containers/Proyects.astro";
 		</h1>
 		<Experience />
 	</div>
-
+	
+	<div
+	class="w-full flex items-center justify-center flex-col mt-[200px]"
+	id="Experiencia"
+>
+	<h1 class="text-5xl font-semibold text-white my-5">
+		Skills
+	</h1>
+	<TabsComponent client:idle/>
+</div>
 	<div
 		class="w-full flex items-center justify-center flex-col mt-[200px]"
 		id="Projects"
