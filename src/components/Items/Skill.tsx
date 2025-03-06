@@ -31,7 +31,7 @@ import {
   Apple,
   ATMEL,
   NXP,
-  Texas
+  Texas,C
 } from '../Tools/Icons';
 
 type Tab = "RTOS" | "Microcontrollers" | "Languages"| "Frameworks" | "Tools"
@@ -61,7 +61,7 @@ const tabs: TabItem[] = [
 
 const iconMap: Record<string, JSX.Element> = {
   "MySQL": <MySQL size='4.6em' />,
-  "C": <Cpp size='4.6em' />,
+  "C": <C size='4.6em' />,
   "C++": <Cpp size='4.6em' />,
   "Tailwind CSS": <TailwindCSS size='4.6em' />,
   "Next JS": <Nextjs size='4.6em' />,
