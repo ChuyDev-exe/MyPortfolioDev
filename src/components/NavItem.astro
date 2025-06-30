@@ -2,12 +2,6 @@
 const { href, title, body } = Astro.props;
 ---
 
-<a class="flex h-auto text-white hover:text-amber-200 text-lg cursor-pointer" href={href}>
+<a class="flex h-auto text-white hover:text-[#51E4B8] text-md  cursor-pointer font-light" href={href} >
 	{title}
 </a>
-
-<style>
-	a:hover{
-		color: #51E4B8;
-	}
-</style>

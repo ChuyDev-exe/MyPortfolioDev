@@ -8,20 +8,22 @@ import Proyects from "../components/Containers/Proyects.astro";
 import TabsComponent from "../components/Items/Skill";
 import { TagTopic } from "../components/Tools/Tags";
 
-
 const subdomain = Astro.locals.subdomain?.toLowerCase(); // asegurar minúsculas
+
 ---
 
 <Layout title="Jesus Velez Soto">
+
+	<nav id="navbar" class="flex gap-7 flex-row justify-center mt-12 mb-16 z-100">
+		<NavItem title="Experience" href={import.meta.env.PUBLIC_URL+"#Experiencia"} />
+		<NavItem title="Projects" href={import.meta.env.PUBLIC_URL+"#Projects"}/>
+		<NavItem title="Blog" href={import.meta.env.PUBLIC_BLOG_URL} />
+	</nav>
+	
 	{
 		subdomain === "blog" ? (
 			<>
-				<nav class="flex gap-5 flex-row justify-center w-full my-10">
-					<NavItem title="Experience" href="/#Experiencia" />
-					<NavItem title="Projects" href="/#Projects" />
-					<NavItem title="Blog" />
-				</nav>
-
+				
 				<div class="flex w-full items-center justify-center flex-col mb-[5rem]">
 					<section class="h-[500px] flex flex-col w-[80%]">
 						<div class="py-3 px-4 mx-auto max-w-screen-xl text-center lg:py-10">
@@ -97,11 +99,7 @@ const subdomain = Astro.locals.subdomain?.toLowerCase(); // asegurar minúsculas
 			</>
 		) : (
 			<>
-				<nav class="flex gap-5 flex-row justify-center w-full my-10">
-					<NavItem title="Experience" href="#Experiencia" />
-					<NavItem title="Projects" href="#Projects" />
-					<NavItem title="Blog" href="/Blog" />
-				</nav>
+				
 
 				<Logo />
 
@@ -117,21 +115,23 @@ const subdomain = Astro.locals.subdomain?.toLowerCase(); // asegurar minúsculas
 					</span>
 				</div>
 
-				<section class="flex items-center w-full justify-center mb-[300px]">
-					<p class="text-2xl max-sm:text-base text-white mt-10 text-wrap w-[70%] md:w-[60%]">
-						3 años de experiencia como
+				<section class="flex items-center w-full justify-center mb-[100px]">
+					<p class="text-3xl max-sm:text-base text-white mt-10 text-wrap w-[90%] md:w-[40%] text-center">
+						3 años de experiencia como<br>
 						<span class="text-[#51E4B8]">
 							{" "}
-							Ingeniero de Software, Software Blogger &
-							Emprendedor{" "}
+							Ingeniero de Software.
+							<br>
+							Freelancee
 						</span>
-						en Jalisco, Mexico. 🇲🇽 Especializado en Aplicaciones Web
+						<br>
+						 🇲🇽 Especializado en Aplicaciones Web
 						y Dispositivos Embebidos con Linux.
 					</p>
 				</section>
 
 				<div
-					class="w-full flex items-center justify-center flex-col mt-[200px]"
+					class="w-full flex items-center justify-center flex-col mt-[100px]"
 					id="Experiencia"
 				>
 					<h1 class="text-5xl font-semibold text-white my-5">
@@ -163,3 +163,39 @@ const subdomain = Astro.locals.subdomain?.toLowerCase(); // asegurar minúsculas
 		)
 	}
 </Layout>
+<script>
+window.addEventListener("scroll", () => {
+  const nav = document.getElementById("navbar");
+
+  if (nav) {
+    if (window.scrollY > 90) {
+      nav.classList.add(
+        "border",
+        "rounded-full",
+        "border-white",
+        "mt-10",
+        "sticky",
+        "top-10",
+        "py-2",
+        "px-10",
+		"backdrop-blur-sm",
+        "w-auto"
+      );
+    } else {
+      nav.classList.remove(
+        "border",
+		"backdrop-blur-sm",
+        "rounded-full",
+        "border-white",
+        "sticky",
+        "top-10",
+        "py-2",
+        "px-10",
+        "w-auto"
+      );
+    }
+  }
+});
+
+
+</script>
