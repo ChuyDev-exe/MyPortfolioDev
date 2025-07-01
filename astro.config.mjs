@@ -7,7 +7,7 @@ import netlify from '@astrojs/netlify';
 import tailwindcss from "@tailwindcss/vite";4
 // https://astro.build/config
 export default defineConfig({
-  integrations: [react(), mdx(),],
+  integrations: [react(), mdx()],
   adapter: netlify(),
   vite: {
     plugins: [tailwindcss()],

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactElement } from "react"
 import { 
   Github,
   TailwindCSS, 
@@ -59,7 +59,7 @@ const tabs: TabItem[] = [
   { id: "Tools", label: "Tools" },
 ]
 
-const iconMap: Record<string, JSX.Element> = {
+const iconMap: Record<string, ReactElement> = {
   "MySQL": <MySQL size='4.6em' />,
   "C": <C size='4.6em' />,
   "C++": <Cpp size='4.6em' />,
