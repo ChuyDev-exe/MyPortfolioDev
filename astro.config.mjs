@@ -5,7 +5,7 @@ import mdx from '@astrojs/mdx';
 
 import netlify from '@astrojs/netlify';
 import tailwindcss from "@tailwindcss/vite";4
-// https://astro.build/config
+
 export default defineConfig({
   integrations: [react(), mdx()],
   adapter: netlify(),
