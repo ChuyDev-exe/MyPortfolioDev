@@ -1,7 +1,7 @@
 import 'es-module-lexer';
 import './chunks/shared_B6bdXPNh.mjs';
 import 'kleur/colors';
-import { A as AstroError, R as ResponseSentError, o as originPathnameSymbol, F as ForbiddenRewrite } from './chunks/astro/server_keureFzm.mjs';
+import { A as AstroError, R as ResponseSentError, o as originPathnameSymbol, F as ForbiddenRewrite } from './chunks/astro/server_D5SafLbU.mjs';
 import 'clsx';
 import { serialize, parse } from 'cookie';
 import 'html-escaper';

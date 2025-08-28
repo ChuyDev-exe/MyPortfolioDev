@@ -1,8 +1,8 @@
-import { c as createComponent, m as maybeRenderHead, b as renderTemplate, a as createAstro, h as addAttribute, j as renderHead, k as renderSlot, r as renderComponent, i as renderScript, l as Fragment } from '../chunks/astro/server_keureFzm.mjs';
+import { c as createComponent, m as maybeRenderHead, b as renderTemplate, a as createAstro, i as addAttribute, j as renderHead, k as renderSlot, r as renderComponent, h as renderScript, l as Fragment } from '../chunks/astro/server_D5SafLbU.mjs';
 import 'kleur/colors';
 import 'clsx';
 /* empty css                                 */
-import { $ as $$NavItem } from '../chunks/NavItem_CXfLw7N5.mjs';
+import { $ as $$NavItem } from '../chunks/NavItem_ClOkr7_Y.mjs';
 /* empty css                                  */
 /* empty css                                 */
 import { M as MySQL, C as Cpp, a as TailwindCSS, N as Nextjs, b as Nodejs, c as AWS, T as TypeScript, Q as Qt, G as Github, F as Figma, d as Texas, e as NXP, f as ATMEL, W as Windows, g as Apple, B as Bash, h as GraphQL, J as JavaScript, i as CSharp, S as ST, E as Espressif, j as Microchip, k as Flutter, A as AstroI, l as Microsoft, m as Android, n as Markdown, D as Docker, R as RaspberryPI, L as Linux, o as LVGL, p as C } from '../chunks/Icons_BZHduql6.mjs';
@@ -251,26 +251,71 @@ const tabContent = {
   }
 };
 const TabContent = ({ content, isActive, tabId }) => {
-  if (!isActive) return null;
-  return /* @__PURE__ */ jsxs("div", { className: "mt-8 animate-fade-up", children: [
-    /* @__PURE__ */ jsx("div", { className: "flex flex-wrap justify-center gap-12", children: content.topRow.map((item) => /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center", children: iconMap[item.name] || /* @__PURE__ */ jsx(ContentItem, { item }) }, item.name)) }),
-    content.bottomRow.length > 0 && /* @__PURE__ */ jsx("div", { className: "flex flex-wrap justify-center gap-10 mt-12", children: content.bottomRow.map((item) => /* @__PURE__ */ jsx("div", { children: iconMap[item.name] || /* @__PURE__ */ jsx(ContentItem, { item }) }, item.name)) })
-  ] }, tabId);
+  return /* @__PURE__ */ jsx(
+    "div",
+    {
+      className: `absolute inset-0 transition-all duration-300 ${isActive ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"}`,
+      children: /* @__PURE__ */ jsxs("div", { className: "mt-8", children: [
+        /* @__PURE__ */ jsx("div", { className: "flex flex-wrap justify-center gap-12", children: content.topRow.map((item) => /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center transform hover:scale-110 transition-transform duration-200", children: iconMap[item.name] || /* @__PURE__ */ jsx(ContentItem, { item }) }, `${tabId}-${item.name}`)) }),
+        content.bottomRow.length > 0 && /* @__PURE__ */ jsx("div", { className: "flex flex-wrap justify-center gap-10 mt-12", children: content.bottomRow.map((item) => /* @__PURE__ */ jsx("div", { className: "transform hover:scale-110 transition-transform duration-200", children: iconMap[item.name] || /* @__PURE__ */ jsx(ContentItem, { item }) }, `${tabId}-${item.name}`)) })
+      ] })
+    }
+  );
 };
-const ContentItem = ({ item }) => /* @__PURE__ */ jsx("div", { className: "p-4", children: item.type === "image" ? /* @__PURE__ */ jsx("img", { src: `/images/${item.name}.png`, alt: item.name, width: 48, height: 48, className: "h-12 w-auto text-white" }) : /* @__PURE__ */ jsx("h1", { className: "text-xl text-white uppercase", children: item.name }) });
+const ContentItem = ({ item }) => /* @__PURE__ */ jsxs("div", { className: "p-4 flex items-center justify-center", children: [
+  item.type === "image" ? /* @__PURE__ */ jsx(
+    "img",
+    {
+      src: `/images/${item.name}.png`,
+      alt: item.name,
+      width: 48,
+      height: 48,
+      className: "h-12 w-auto",
+      onError: (e) => {
+        const target = e.target;
+        target.style.display = "none";
+        if (target.nextSibling) {
+          target.nextSibling.style.display = "block";
+        }
+      }
+    }
+  ) : /* @__PURE__ */ jsx("h1", { className: "text-xl text-white uppercase font-semibold tracking-wide", children: item.name }),
+  item.type === "image" && /* @__PURE__ */ jsx(
+    "h1",
+    {
+      className: "text-xl text-white uppercase font-semibold tracking-wide",
+      style: { display: "none" },
+      children: item.name
+    }
+  )
+] });
 function TabsComponent() {
   const [activeTab, setActiveTab] = useState("RTOS");
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+  };
   return /* @__PURE__ */ jsxs("section", { className: "max-w-4xl mx-auto px-4 py-16 text-center", children: [
     /* @__PURE__ */ jsx("div", { className: "border-b border-gray-200 mb-12", children: /* @__PURE__ */ jsx("nav", { className: "flex justify-center -mb-px relative", children: tabs.map((tab) => /* @__PURE__ */ jsx(
       "button",
       {
-        onClick: () => setActiveTab(tab.id),
-        className: `pb-4 px-6 relative ${activeTab === tab.id ? "text-teal-500 border-b-2 border-teal-500" : "text-gray-200 hover:text-gray-700"}`,
+        type: "button",
+        onClick: () => handleTabClick(tab.id),
+        className: `pb-4 px-6 relative transition-colors duration-200 font-medium text-lg ${activeTab === tab.id ? "text-teal-400 border-b-2 border-teal-400" : "text-gray-300 hover:text-teal-300 border-b-2 border-transparent hover:border-teal-300/50"}`,
+        "aria-selected": activeTab === tab.id,
+        role: "tab",
         children: tab.label
       },
       tab.id
     )) }) }),
-    /* @__PURE__ */ jsx("div", { className: "relative", children: Object.entries(tabContent).map(([key, content]) => /* @__PURE__ */ jsx(TabContent, { tabId: key, content, isActive: activeTab === key }, key)) })
+    /* @__PURE__ */ jsx("div", { className: "relative min-h-[300px]", role: "tabpanel", children: tabs.map((tab) => /* @__PURE__ */ jsx(
+      TabContent,
+      {
+        tabId: tab.id,
+        content: tabContent[tab.id],
+        isActive: activeTab === tab.id
+      },
+      tab.id
+    )) })
   ] });
 }
 
@@ -294,7 +339,7 @@ Freelancee
 Experiencia
 </h1> ${renderComponent($$result3, "Experience", $$Experience, {})} </div> <div class="w-full flex items-center justify-center flex-col mt-[200px]" id="Skills"> <h1 class="text-5xl font-semibold text-white my-5">
 Skills
-</h1> ${renderComponent($$result3, "TabsComponent", TabsComponent, { "client:idle": true, "client:component-hydration": "idle", "client:component-path": "/Users/chuy/Desktop/MyPortfolioDev/src/components/Items/Skill", "client:component-export": "default" })} </div> <div class="w-full flex items-center justify-center flex-col mt-[200px]" id="Projects"> <h1 class="text-5xl font-semibold text-white my-5">
+</h1> ${renderComponent($$result3, "TabsComponent", TabsComponent, { "client:load": true, "client:component-hydration": "load", "client:component-path": "/Users/chuy/Desktop/MyPortfolioDev/src/components/Items/Skill", "client:component-export": "default" })} </div> <div class="w-full flex items-center justify-center flex-col mt-[200px]" id="Projects"> <h1 class="text-5xl font-semibold text-white my-5">
 Proyectos
 </h1> ${renderComponent($$result3, "Proyects", $$Proyects, {})} </div> ` })}`}` })} ${renderScript($$result, "/Users/chuy/Desktop/MyPortfolioDev/src/pages/index.astro?astro&type=script&index=0&lang.ts")}`;
 }, "/Users/chuy/Desktop/MyPortfolioDev/src/pages/index.astro", void 0);

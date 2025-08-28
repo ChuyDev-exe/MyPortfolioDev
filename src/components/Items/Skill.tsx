@@ -31,7 +31,8 @@ import {
   Apple,
   ATMEL,
   NXP,
-  Texas,C
+  Texas,
+  C
 } from '../Tools/Icons';
 
 type Tab = "RTOS" | "Microcontrollers" | "Languages"| "Frameworks" | "Tools"
@@ -154,42 +155,76 @@ const tabContent: Record<Tab, TabContentType> = {
 }
 
 const TabContent = ({ content, isActive, tabId }: { content: TabContentType; isActive: boolean; tabId: Tab }) => {
-  if (!isActive) return null
-
   return (
-    <div key={tabId} className="mt-8 animate-fade-up">
-      <div className="flex flex-wrap justify-center gap-12">
-        {content.topRow.map((item) => (
-          <div key={item.name} className="flex items-center justify-center">
-            {iconMap[item.name] || <ContentItem item={item} />}
-          </div>
-        ))}
-      </div>
-      {content.bottomRow.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-10 mt-12">
-          {content.bottomRow.map((item) => (
-            <div key={item.name}>
+    <div 
+      className={`absolute inset-0 transition-all duration-300 ${
+        isActive 
+          ? 'opacity-100 translate-y-0 pointer-events-auto' 
+          : 'opacity-0 translate-y-4 pointer-events-none'
+      }`}
+    >
+      <div className="mt-8">
+        <div className="flex flex-wrap justify-center gap-12">
+          {content.topRow.map((item) => (
+            <div key={`${tabId}-${item.name}`} className="flex items-center justify-center transform hover:scale-110 transition-transform duration-200">
               {iconMap[item.name] || <ContentItem item={item} />}
             </div>
           ))}
         </div>
-      )}
+        {content.bottomRow.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-10 mt-12">
+            {content.bottomRow.map((item) => (
+              <div key={`${tabId}-${item.name}`} className="transform hover:scale-110 transition-transform duration-200">
+                {iconMap[item.name] || <ContentItem item={item} />}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
 const ContentItem = ({ item }: { item: ContentItem }) => (
-  <div className="p-4">
+  <div className="p-4 flex items-center justify-center">
     {item.type === "image" ? (
-      <img src={`/images/${item.name}.png`} alt={item.name} width={48} height={48} className="h-12 w-auto text-white" />
+      <img 
+        src={`/images/${item.name}.png`} 
+        alt={item.name} 
+        width={48} 
+        height={48} 
+        className="h-12 w-auto" 
+        onError={(e) => {
+          // Fallback to text if image fails to load
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+          if (target.nextSibling) {
+            (target.nextSibling as HTMLElement).style.display = 'block';
+          }
+        }}
+      />
     ) : (
-      <h1 className="text-xl text-white uppercase">{item.name}</h1>
+      <h1 className="text-xl text-white uppercase font-semibold tracking-wide">
+        {item.name}
+      </h1>
+    )}
+    {item.type === "image" && (
+      <h1 
+        className="text-xl text-white uppercase font-semibold tracking-wide" 
+        style={{ display: 'none' }}
+      >
+        {item.name}
+      </h1>
     )}
   </div>
 )
 
 export default function TabsComponent() {
   const [activeTab, setActiveTab] = useState<Tab>("RTOS")
+
+  const handleTabClick = (tabId: Tab) => {
+    setActiveTab(tabId)
+  }
 
   return (
     <section className="max-w-4xl mx-auto px-4 py-16 text-center">
@@ -198,10 +233,15 @@ export default function TabsComponent() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`pb-4 px-6 relative ${
-                activeTab === tab.id ? "text-teal-500 border-b-2 border-teal-500" : "text-gray-200 hover:text-gray-700"
+              type="button"
+              onClick={() => handleTabClick(tab.id)}
+              className={`pb-4 px-6 relative transition-colors duration-200 font-medium text-lg ${
+                activeTab === tab.id 
+                  ? "text-teal-400 border-b-2 border-teal-400" 
+                  : "text-gray-300 hover:text-teal-300 border-b-2 border-transparent hover:border-teal-300/50"
               }`}
+              aria-selected={activeTab === tab.id}
+              role="tab"
             >
               {tab.label}
             </button>
@@ -209,9 +249,14 @@ export default function TabsComponent() {
         </nav>
       </div>
 
-      <div className="relative">
-        {(Object.entries(tabContent) as [Tab, TabContentType][]).map(([key, content]) => (
-          <TabContent key={key} tabId={key} content={content} isActive={activeTab === key} />
+      <div className="relative min-h-[300px]" role="tabpanel">
+        {tabs.map((tab) => (
+          <TabContent 
+            key={tab.id} 
+            tabId={tab.id} 
+            content={tabContent[tab.id]} 
+            isActive={activeTab === tab.id} 
+          />
         ))}
       </div>
     </section>
