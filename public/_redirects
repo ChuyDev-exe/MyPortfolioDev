@@ -2,7 +2,6 @@
 
 # Subdominio blog - mapear rutas del blog
 https://blog.jesusvelez.xyz/Blog/*  /Blog/:splat  200!
-https://blog.jesusvelez.xyz/DevBlog /DevBlog      200!
 https://blog.jesusvelez.xyz/       /DevBlog      200!
 
 # Dominio principal - redirigir rutas del blog al subdominio

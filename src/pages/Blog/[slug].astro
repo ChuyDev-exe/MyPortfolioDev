@@ -2,6 +2,7 @@
 import type { GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
 import BlogLayout from '../../layouts/BlogLayout.astro';
+import NavItem from '../../components/NavItem.astro';
 
 export const getStaticPaths = (async () => {
   const Posts = await getCollection('posts')
@@ -15,29 +16,312 @@ const { post } = Astro.props;
 const frontmatter = post.data;
 
 const { Content, headings } = await post.render();
+
+// Format date
+const publishDate = frontmatter.date ? new Date(frontmatter.date).toLocaleDateString('es-ES', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+}) : '';
+
+// Calculate reading time (rough estimate)
+const readingTime = Math.ceil((post.body?.length || 0) / 1000) || 5;
 ---
 
 <BlogLayout title={frontmatter.title}>
-  <h1 class="text-xs text-gray-500 mb-0">{frontmatter.title}</h1>
-  <h4 class="text-md text-gray-400 mb-0">{frontmatter.author}</h4>
-  
+  <!-- Navigation -->
+  <nav class="flex gap-5 flex-row justify-center w-full my-10 px-4">
+    <NavItem title="← Blog Home" href="/DevBlog" />
+    <NavItem title="All Posts" href="/Blog/Posts" />
+    <NavItem title="Portfolio" href="https://jesusvelez.xyz" />
+  </nav>
 
-    <main class="flex flex-row">
-      <div class="h-[100vh] w-[20%]">
-        <h3>Tabla de contenidos</h3>
-        <ol>
-          {
-            headings.map((heading, index) => (
-              <li>
-                <a href={`#${heading.slug}`}>
-                  {index + 1} - {heading.text}
-                </a>
-              </li>
-            ))
-          }
-        </ol>
+  <!-- Article Header -->
+  <article class="max-w-4xl mx-auto px-4 lg:px-8">
+    <header class="mb-12 text-center">
+      <!-- Category/Tags -->
+      {frontmatter.tags && (
+        <div class="flex flex-wrap justify-center gap-2 mb-4">
+          {frontmatter.tags.map((tag: string) => (
+            <span class="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-300">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+      
+      <!-- Title -->
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+        {frontmatter.title}
+      </h1>
+      
+      <!-- Subtitle/Description -->
+      {frontmatter.description && (
+        <p class="text-xl text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
+          {frontmatter.description}
+        </p>
+      )}
+      
+      <!-- Meta Information -->
+      <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+        {frontmatter.author && (
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+            <span class="font-medium">{frontmatter.author}</span>
+          </div>
+        )}
+        
+        {publishDate && (
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+            </svg>
+            <time datetime={frontmatter.date?.toISOString()}>{publishDate}</time>
+          </div>
+        )}
+        
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+          </svg>
+          <span>{readingTime} min de lectura</span>
+        </div>
       </div>
-      <!-- Contenido  -->
-      <Content />
-    </main>
+      
+      <!-- Divider -->
+      <div class="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto mt-8"></div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Table of Contents - Desktop Sidebar -->
+      {headings.length > 0 && (
+        <aside class="lg:w-80 lg:shrink-0">
+          <div class="sticky top-8 bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+              </svg>
+              Tabla de contenidos
+            </h3>
+            <nav>
+              <ol class="space-y-2">
+                {headings.map((heading, index) => (
+                  <li 
+                    class={`pl-${(heading.depth - 1) * 4}`}
+                    style={`margin-left: ${(heading.depth - 1) * 1}rem`}
+                  >
+                    <a 
+                      href={`#${heading.slug}`}
+                      class="block text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 px-2 -ml-2"
+                    >
+                      <span class="text-blue-500 font-medium mr-2">{index + 1}.</span>
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          </div>
+        </aside>
+      )}
+      
+      <!-- Article Content -->
+      <main class="flex-1 min-w-0">
+        <div class="prose prose-lg prose-gray dark:prose-invert max-w-none 
+                    prose-headings:text-gray-900 dark:prose-headings:text-white
+                    prose-p:text-gray-700 dark:prose-p:text-gray-300
+                    prose-a:text-blue-600 dark:prose-a:text-blue-400
+                    prose-strong:text-gray-900 dark:prose-strong:text-white
+                    prose-code:text-pink-600 dark:prose-code:text-pink-400
+                    prose-code:bg-gray-100 dark:prose-code:bg-gray-800
+                    prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+                    prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950
+                    prose-pre:border prose-pre:border-gray-700">
+          <Content />
+        </div>
+      </main>
+    </div>
+
+    <!-- Article Footer -->
+    <footer class="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">
+      <!-- Share Section -->
+      <div class="text-center mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          ¿Te gustó este artículo?
+        </h3>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(frontmatter.title)}&url=${encodeURIComponent(`https://blog.jesusvelez.xyz/Blog/${post.slug}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Compartir en X
+          </a>
+          
+          <a
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://blog.jesusvelez.xyz/Blog/${post.slug}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors duration-200"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            Compartir en LinkedIn
+          </a>
+        </div>
+      </div>
+
+      <!-- Navigation to other posts -->
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 py-6">
+        <a
+          href="/Blog/Posts"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200"
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          Ver todos los posts
+        </a>
+        
+        <a
+          href="/DevBlog"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+        >
+          Volver al Blog
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+          </svg>
+        </a>
+      </div>
+    </footer>
+  </article>
 </BlogLayout>
+
+<script>
+  // Smooth scrolling for table of contents links
+  document.addEventListener('DOMContentLoaded', function() {
+    const tocLinks = document.querySelectorAll('a[href^="#"]');
+    
+    tocLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = (e.currentTarget as HTMLAnchorElement)?.getAttribute('href');
+        const target = href ? document.querySelector(href) : null;
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Highlight current section in TOC
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const id = entry.target.getAttribute('id');
+        const tocLink = document.querySelector(`a[href="#${id}"]`);
+        
+        if (entry.isIntersecting && tocLink) {
+          // Remove active class from all TOC links
+          document.querySelectorAll('a[href^="#"]').forEach(link => {
+            link.classList.remove('text-blue-600', 'dark:text-blue-400', 'font-semibold');
+          });
+          
+          // Add active class to current link
+          tocLink.classList.add('text-blue-600', 'dark:text-blue-400', 'font-semibold');
+        }
+      });
+    }, {
+      rootMargin: '-20% 0% -35% 0%'
+    });
+
+    // Observe all headings
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
+      if (heading.id) {
+        observer.observe(heading);
+      }
+    });
+  });
+</script>
+
+<style>
+  /* Custom styles for better readability */
+  .prose {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+  
+  .prose h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose h1:first-child {
+    margin-top: 0;
+  }
+  
+  .prose h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .prose h3 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .prose p {
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose ul, .prose ol {
+    margin-bottom: 1.5rem;
+  }
+  
+  .prose li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .prose blockquote {
+    border-left: 4px solid rgb(59 130 246);
+    padding-left: 1.5rem;
+    font-style: italic;
+    background-color: rgb(249 250 251);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+  
+  .dark .prose blockquote {
+    background-color: rgb(31 41 55);
+  }
+  
+  /* Responsive table of contents */
+  @media (max-width: 1023px) {
+    aside {
+      order: 2;
+      margin-top: 2rem;
+    }
+    
+    aside .sticky {
+      position: static;
+    }
+  }
+</style>
