@@ -1,17 +1,33 @@
 import 'es-module-lexer';
 import './chunks/shared_B6bdXPNh.mjs';
 import 'kleur/colors';
-import { A as AstroError, R as ResponseSentError, o as originPathnameSymbol, F as ForbiddenRewrite } from './chunks/astro/server_D19AQUrQ.mjs';
+import { A as AstroError, R as ResponseSentError, o as originPathnameSymbol, F as ForbiddenRewrite } from './chunks/astro/server_BFaFQWjG.mjs';
 import 'clsx';
 import { serialize, parse } from 'cookie';
 import 'html-escaper';
+import { a as appendForwardSlash, r as removeTrailingForwardSlash } from './chunks/path_Cq05amY8.mjs';
 
 const onRequest$1 = async (context, next) => {
-  const host = context.request.headers.get("host") || "";
-  const subdomain = host.split(".")[0];
-  context.locals.subdomain = subdomain;
   return next();
 };
+
+function shouldAppendForwardSlash(trailingSlash, buildFormat) {
+  switch (trailingSlash) {
+    case "always":
+      return true;
+    case "never":
+      return false;
+    case "ignore": {
+      switch (buildFormat) {
+        case "directory":
+          return true;
+        case "preserve":
+        case "file":
+          return false;
+      }
+    }
+  }
+}
 
 const DELETED_EXPIRATION = /* @__PURE__ */ new Date(0);
 const DELETED_VALUE = "deleted";
@@ -210,8 +226,20 @@ class AstroCookies {
   }
 }
 
-function setOriginPathname(request, pathname) {
-  Reflect.set(request, originPathnameSymbol, encodeURIComponent(pathname));
+function setOriginPathname(request, pathname, trailingSlash, buildFormat) {
+  if (!pathname) {
+    pathname = "/";
+  }
+  const shouldAppendSlash = shouldAppendForwardSlash(trailingSlash, buildFormat);
+  let finalPathname;
+  if (pathname === "/") {
+    finalPathname = "/";
+  } else if (shouldAppendSlash) {
+    finalPathname = appendForwardSlash(pathname);
+  } else {
+    finalPathname = removeTrailingForwardSlash(pathname);
+  }
+  Reflect.set(request, originPathnameSymbol, encodeURIComponent(finalPathname));
 }
 
 function getParams(route, pathname) {
@@ -280,7 +308,13 @@ function sequence(...handlers) {
             handleContext.url = new URL(newRequest.url);
             handleContext.cookies = new AstroCookies(newRequest);
             handleContext.params = getParams(routeData, pathname);
-            setOriginPathname(handleContext.request, oldPathname);
+            handleContext.routePattern = routeData.route;
+            setOriginPathname(
+              handleContext.request,
+              oldPathname,
+              pipeline.manifest.trailingSlash,
+              pipeline.manifest.buildFormat
+            );
           }
           return applyHandle(i + 1, handleContext);
         } else {

@@ -1,7 +1,7 @@
 import 'kleur/colors';
 import { clsx } from 'clsx';
 import { escape } from 'html-escaper';
-import { encodeHexUpperCase, encodeBase64, decodeBase64 } from '@oslojs/encoding';
+import { encodeBase64, encodeHexUpperCase, decodeBase64 } from '@oslojs/encoding';
 import { z } from 'zod';
 import 'cssesc';
 
@@ -136,30 +136,11 @@ const InvalidImageService = {
   title: "Error while loading image service.",
   message: "There was an error loading the configured image service. Please see the stack trace for more information."
 };
-const MissingImageDimension = {
-  name: "MissingImageDimension",
-  title: "Missing image dimensions",
-  message: (missingDimension, imageURL) => `Missing ${missingDimension === "both" ? "width and height attributes" : `${missingDimension} attribute`} for ${imageURL}. When using remote images, both dimensions are required in order to avoid CLS.`,
-  hint: "If your image is inside your `src` folder, you probably meant to import it instead. See [the Imports guide for more information](https://docs.astro.build/en/guides/imports/#other-assets). You can also use `inferSize={true}` for remote images to get the original dimensions."
-};
 const FailedToFetchRemoteImageDimensions = {
   name: "FailedToFetchRemoteImageDimensions",
   title: "Failed to retrieve remote image dimensions",
   message: (imageURL) => `Failed to get the dimensions for ${imageURL}.`,
   hint: "Verify your remote image URL is accurate, and that you are not using `inferSize` with a file located in your `public/` folder."
-};
-const UnsupportedImageFormat = {
-  name: "UnsupportedImageFormat",
-  title: "Unsupported image format",
-  message: (format, imagePath, supportedFormats) => `Received unsupported format \`${format}\` from \`${imagePath}\`. Currently only ${supportedFormats.join(
-    ", "
-  )} are supported by our image services.`,
-  hint: "Using an `img` tag directly instead of the `Image` component might be what you're looking for."
-};
-const UnsupportedImageConversion = {
-  name: "UnsupportedImageConversion",
-  title: "Unsupported image conversion",
-  message: "Converting between vector (such as SVGs) and raster (such as PNGs and JPEGs) images is not currently supported."
 };
 const ExpectedImage = {
   name: "ExpectedImage",
@@ -180,12 +161,6 @@ const ExpectedNotESMImage = {
   message: "An ESM-imported image cannot be passed directly to `getImage()`. Instead, pass an object with the image in the `src` property.",
   hint: "Try changing `getImage(myImage)` to `getImage({ src: myImage })`"
 };
-const IncompatibleDescriptorOptions = {
-  name: "IncompatibleDescriptorOptions",
-  title: "Cannot set both `densities` and `widths`",
-  message: "Only one of `densities` or `widths` can be specified. In most cases, you'll probably want to use only `widths` if you require specific widths.",
-  hint: "Those attributes are used to construct a `srcset` attribute, which cannot have both `x` and `w` descriptors."
-};
 const NoImageMetadata = {
   name: "NoImageMetadata",
   title: "Could not process image metadata.",
@@ -196,12 +171,6 @@ const ResponseSentError = {
   name: "ResponseSentError",
   title: "Unable to set response.",
   message: "The response has already been sent to the browser and cannot be altered."
-};
-const LocalImageUsedWrongly = {
-  name: "LocalImageUsedWrongly",
-  title: "Local images must be imported.",
-  message: (imageFilePath) => `\`Image\`'s and \`getImage\`'s \`src\` parameter must be an imported image or an URL, it cannot be a string filepath. Received \`${imageFilePath}\`.`,
-  hint: "If you want to use an image from your `src` folder, you need to either import it or if the image is coming from a content collection, use the [image() schema helper](https://docs.astro.build/en/guides/images/#images-in-content-collections). See https://docs.astro.build/en/guides/images/#src-required for more information on the `src` property."
 };
 const AstroGlobUsedOutside = {
   name: "AstroGlobUsedOutside",
@@ -214,12 +183,6 @@ const AstroGlobNoMatch = {
   title: "Astro.glob() did not match any files.",
   message: (globStr) => `\`Astro.glob(${globStr})\` did not return any matching files.`,
   hint: "Check the pattern for typos."
-};
-const MissingSharp = {
-  name: "MissingSharp",
-  title: "Could not find Sharp.",
-  message: "Could not find Sharp. Please install Sharp (`sharp`) manually into your project or migrate to another image service.",
-  hint: "See Sharp's installation instructions for more information: https://sharp.pixelplumbing.com/install. If you are not relying on `astro:assets` to optimize, transform, or process any images, you can configure a passthrough image service instead of installing Sharp. See https://docs.astro.build/en/reference/errors/missing-sharp for more information.\n\nSee https://docs.astro.build/en/guides/images/#default-image-service for more information on how to migrate to another image service."
 };
 const ForbiddenRewrite = {
   name: "ForbiddenRewrite",
@@ -287,7 +250,7 @@ function createComponent(arg1, moduleId, propagation) {
   }
 }
 
-const ASTRO_VERSION = "5.10.1";
+const ASTRO_VERSION = "5.13.4";
 const NOOP_MIDDLEWARE_HEADER = "X-Astro-Noop";
 const originPathnameSymbol = Symbol.for("astro.originPathname");
 
@@ -420,16 +383,6 @@ function getPropagationHint(result, factory) {
     hint = result.componentMetadata.get(factory.moduleId).propagation;
   }
   return hint;
-}
-
-const RenderInstructionSymbol = Symbol.for("astro:render");
-function createRenderInstruction(instruction) {
-  return Object.defineProperty(instruction, RenderInstructionSymbol, {
-    value: true
-  });
-}
-function isRenderInstruction(chunk) {
-  return chunk && typeof chunk === "object" && chunk[RenderInstructionSymbol];
 }
 
 const PROP_TYPE = {
@@ -727,11 +680,11 @@ function createThinHead() {
   };
 }
 
-const ISLAND_STYLES = "astro-island,astro-slot,astro-static-slot{display:contents}";
+var astro_island_prebuilt_default = `(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=\` (export \${v})\`),console.error(\`[hydrate] Error parsing props for component \${s}\`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(\`astro:\${c}\`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(\`[astro-island] Error hydrating \${this.getAttribute("component-url")}\`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();`;
 
 var astro_island_prebuilt_dev_default = `(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var l=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>y(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[h,e]=t;return h in i?i[h](e):void 0},a=t=>t.map(o),y=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([h,e])=>[h,o(e)]));class f extends HTMLElement{constructor(){super(...arguments);l(this,"Component");l(this,"hydrator");l(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},p=this.querySelectorAll("template[data-astro-template]");for(let r of p){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let u;try{u=this.hasAttribute("props")?y(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=\` (export \${v})\`),console.error(\`[hydrate] Error parsing props for component \${s}\`,this.getAttribute("props"),r),r}let d,m=this.hydrator(this);d=performance.now(),await m(this.Component,u,n,{client:this.getAttribute("client")}),d&&this.setAttribute("client-render-time",(performance.now()-d).toString()),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});l(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(\`astro:\${c}\`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[p,{default:u}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),d=this.getAttribute("component-export")||"default";if(!d.includes("."))this.Component=p[d];else{this.Component=p;for(let m of d.split("."))this.Component=this.Component[m]}return this.hydrator=u,this.hydrate},e,this)}catch(n){console.error(\`[astro-island] Error hydrating \${this.getAttribute("component-url")}\`,n)}}attributeChangedCallback(){this.hydrate()}}l(f,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",f)}})();`;
 
-var astro_island_prebuilt_default = `(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=\` (export \${v})\`),console.error(\`[hydrate] Error parsing props for component \${s}\`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(\`astro:\${c}\`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(\`[astro-island] Error hydrating \${this.getAttribute("component-url")}\`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();`;
+const ISLAND_STYLES = "astro-island,astro-slot,astro-static-slot{display:contents}";
 
 function determineIfNeedsHydrationScript(result) {
   if (result._metadata.hasHydrationScript) {
@@ -794,6 +747,16 @@ function renderCspContent(result) {
   const scriptSrc = `script-src ${scriptResources} ${Array.from(finalScriptHashes).join(" ")}${strictDynamic};`;
   const styleSrc = `style-src ${styleResources} ${Array.from(finalStyleHashes).join(" ")};`;
   return `${directives} ${scriptSrc} ${styleSrc}`;
+}
+
+const RenderInstructionSymbol = Symbol.for("astro:render");
+function createRenderInstruction(instruction) {
+  return Object.defineProperty(instruction, RenderInstructionSymbol, {
+    value: true
+  });
+}
+function isRenderInstruction(chunk) {
+  return chunk && typeof chunk === "object" && chunk[RenderInstructionSymbol];
 }
 
 const voidElementNames = /^(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
@@ -1240,6 +1203,9 @@ class ServerIslandComponent {
   displayName;
   hostId;
   islandContent;
+  componentPath;
+  componentExport;
+  componentId;
   constructor(result, props, slots, displayName) {
     this.result = result;
     this.props = props;
@@ -1247,8 +1213,64 @@ class ServerIslandComponent {
     this.displayName = displayName;
   }
   async init() {
+    const content = await this.getIslandContent();
+    if (this.result.cspDestination) {
+      this.result._metadata.extraScriptHashes.push(
+        await generateCspDigest(SERVER_ISLAND_REPLACER, this.result.cspAlgorithm)
+      );
+      const contentDigest = await generateCspDigest(content, this.result.cspAlgorithm);
+      this.result._metadata.extraScriptHashes.push(contentDigest);
+    }
+    return createThinHead();
+  }
+  async render(destination) {
+    const hostId = await this.getHostId();
+    const islandContent = await this.getIslandContent();
+    destination.write(createRenderInstruction({ type: "server-island-runtime" }));
+    destination.write("<!--[if astro]>server-island-start<![endif]-->");
+    for (const name in this.slots) {
+      if (name === "fallback") {
+        await renderChild(destination, this.slots.fallback(this.result));
+      }
+    }
+    destination.write(
+      `<script type="module" data-astro-rerun data-island-id="${hostId}">${islandContent}</script>`
+    );
+  }
+  getComponentPath() {
+    if (this.componentPath) {
+      return this.componentPath;
+    }
     const componentPath = this.props["server:component-path"];
+    if (!componentPath) {
+      throw new Error(`Could not find server component path`);
+    }
+    this.componentPath = componentPath;
+    return componentPath;
+  }
+  getComponentExport() {
+    if (this.componentExport) {
+      return this.componentExport;
+    }
     const componentExport = this.props["server:component-export"];
+    if (!componentExport) {
+      throw new Error(`Could not find server component export`);
+    }
+    this.componentExport = componentExport;
+    return componentExport;
+  }
+  async getHostId() {
+    if (!this.hostId) {
+      this.hostId = await crypto.randomUUID();
+    }
+    return this.hostId;
+  }
+  async getIslandContent() {
+    if (this.islandContent) {
+      return this.islandContent;
+    }
+    const componentPath = this.getComponentPath();
+    const componentExport = this.getComponentExport();
     const componentId = this.result.serverIslandNameMap.get(componentPath);
     if (!componentId) {
       throw new Error(`Could not find server component name`);
@@ -1261,13 +1283,13 @@ class ServerIslandComponent {
     const renderedSlots = {};
     for (const name in this.slots) {
       if (name !== "fallback") {
-        const content2 = await renderSlotToString(this.result, this.slots[name]);
-        renderedSlots[name] = content2.toString();
+        const content = await renderSlotToString(this.result, this.slots[name]);
+        renderedSlots[name] = content.toString();
       }
     }
     const key = await this.result.key;
     const propsEncrypted = Object.keys(this.props).length === 0 ? "" : await encryptString(key, JSON.stringify(this.props));
-    const hostId = crypto.randomUUID();
+    const hostId = await this.getHostId();
     const slash = this.result.base.endsWith("/") ? "" : "/";
     let serverIslandUrl = `${this.result.base}${slash}_server-islands/${componentId}${this.result.trailingSlash === "always" ? "/" : ""}`;
     const potentialSearchParams = createSearchParams(
@@ -1299,29 +1321,8 @@ let response = await fetch('${serverIslandUrl}', {
 	body: JSON.stringify(data),
 });`
     );
-    const content = `${method}replaceServerIsland('${hostId}', response);`;
-    if (this.result.cspDestination) {
-      this.result._metadata.extraScriptHashes.push(
-        await generateCspDigest(SERVER_ISLAND_REPLACER, this.result.cspAlgorithm)
-      );
-      const contentDigest = await generateCspDigest(content, this.result.cspAlgorithm);
-      this.result._metadata.extraScriptHashes.push(contentDigest);
-    }
-    this.islandContent = content;
-    this.hostId = hostId;
-    return createThinHead();
-  }
-  async render(destination) {
-    destination.write(createRenderInstruction({ type: "server-island-runtime" }));
-    destination.write("<!--[if astro]>server-island-start<![endif]-->");
-    for (const name in this.slots) {
-      if (name === "fallback") {
-        await renderChild(destination, this.slots.fallback(this.result));
-      }
-    }
-    destination.write(
-      `<script type="module" data-astro-rerun data-island-id="${this.hostId}">${this.islandContent}</script>`
-    );
+    this.islandContent = `${method}replaceServerIsland('${hostId}', response);`;
+    return this.islandContent;
   }
 }
 const renderServerIslandRuntime = () => {
@@ -2307,16 +2308,16 @@ function transformSetDirectives(vnode) {
     return;
   }
 }
-function createVNode(type, props) {
+function createVNode(type, props = {}, key) {
   const vnode = {
     [Renderer]: "astro:jsx",
     [AstroJSX]: true,
     type,
-    props: props ?? {}
+    props
   };
   transformSetDirectives(vnode);
   transformSlots(vnode);
   return vnode;
 }
 
-export { AstroError as A, FailedToFetchRemoteImageDimensions as B, ExpectedImageOptions as C, ExpectedNotESMImage as D, ExpectedImage as E, ForbiddenRewrite as F, InvalidImageService as G, ImageMissingAlt as H, IncompatibleDescriptorOptions as I, spreadAttributes as J, ExperimentalFontsNotEnabled as K, LocalImageUsedWrongly as L, MissingSharp as M, NOOP_MIDDLEWARE_HEADER as N, FontFamilyNotFound as O, ResponseSentError as R, UnknownContentCollectionError as U, __astro_tag_component__ as _, createAstro as a, renderTemplate as b, createComponent as c, RenderUndefinedEntryError as d, renderUniqueStylesheet as e, renderScriptElement as f, createHeadAndContent as g, addAttribute as h, renderHead as i, renderSlot as j, renderScript as k, Fragment as l, maybeRenderHead as m, decodeKey as n, originPathnameSymbol as o, renderJSX as p, createVNode as q, renderComponent as r, AstroJSX as s, AstroUserError as t, unescapeHTML as u, MissingImageDimension as v, UnsupportedImageFormat as w, UnsupportedImageConversion as x, toStyleString as y, NoImageMetadata as z };
+export { AstroError as A, ImageMissingAlt as B, spreadAttributes as C, ExperimentalFontsNotEnabled as D, ExpectedImageOptions as E, ForbiddenRewrite as F, FontFamilyNotFound as G, InvalidImageService as I, NOOP_MIDDLEWARE_HEADER as N, ResponseSentError as R, UnknownContentCollectionError as U, __astro_tag_component__ as _, createAstro as a, renderTemplate as b, createComponent as c, RenderUndefinedEntryError as d, renderUniqueStylesheet as e, renderScriptElement as f, createHeadAndContent as g, addAttribute as h, renderHead as i, renderSlot as j, renderScript as k, Fragment as l, maybeRenderHead as m, decodeKey as n, originPathnameSymbol as o, renderJSX as p, createVNode as q, renderComponent as r, AstroJSX as s, AstroUserError as t, unescapeHTML as u, toStyleString as v, NoImageMetadata as w, FailedToFetchRemoteImageDimensions as x, ExpectedImage as y, ExpectedNotESMImage as z };

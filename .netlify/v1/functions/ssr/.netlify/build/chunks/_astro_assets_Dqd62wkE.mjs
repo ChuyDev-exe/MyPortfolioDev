@@ -1,5 +1,6 @@
-import { j as joinPaths, D as DEFAULT_OUTPUT_FORMAT, i as isRemotePath, a as VALID_SUPPORTED_FORMATS, b as DEFAULT_HASH_PROPS } from './consts_7OPt-DQA.mjs';
-import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, v as MissingImageDimension, w as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, x as UnsupportedImageConversion, y as toStyleString, z as NoImageMetadata, B as FailedToFetchRemoteImageDimensions, C as ExpectedImageOptions, D as ExpectedNotESMImage, G as InvalidImageService, c as createComponent, a as createAstro, H as ImageMissingAlt, m as maybeRenderHead, h as addAttribute, J as spreadAttributes, b as renderTemplate, K as ExperimentalFontsNotEnabled, O as FontFamilyNotFound, u as unescapeHTML } from './astro/server_D19AQUrQ.mjs';
+import { i as isRemotePath } from './path_Cq05amY8.mjs';
+import { v as toStyleString, A as AstroError, w as NoImageMetadata, x as FailedToFetchRemoteImageDimensions, E as ExpectedImageOptions, y as ExpectedImage, z as ExpectedNotESMImage, I as InvalidImageService, c as createComponent, a as createAstro, B as ImageMissingAlt, m as maybeRenderHead, h as addAttribute, C as spreadAttributes, b as renderTemplate, D as ExperimentalFontsNotEnabled, G as FontFamilyNotFound, u as unescapeHTML } from './astro/server_BFaFQWjG.mjs';
+import { D as DEFAULT_HASH_PROPS } from './consts_NtFP2Rt2.mjs';
 import * as mime from 'mrmime';
 import 'clsx';
 import 'kleur/colors';
@@ -106,56 +107,6 @@ const getSizesAttribute = ({
   }
 };
 
-function matchPattern(url, remotePattern) {
-  return matchProtocol(url, remotePattern.protocol) && matchHostname(url, remotePattern.hostname, true) && matchPort(url, remotePattern.port) && matchPathname(url, remotePattern.pathname, true);
-}
-function matchPort(url, port) {
-  return !port || port === url.port;
-}
-function matchProtocol(url, protocol) {
-  return !protocol || protocol === url.protocol.slice(0, -1);
-}
-function matchHostname(url, hostname, allowWildcard = false) {
-  if (!hostname) {
-    return true;
-  } else if (!allowWildcard || !hostname.startsWith("*")) {
-    return hostname === url.hostname;
-  } else if (hostname.startsWith("**.")) {
-    const slicedHostname = hostname.slice(2);
-    return slicedHostname !== url.hostname && url.hostname.endsWith(slicedHostname);
-  } else if (hostname.startsWith("*.")) {
-    const slicedHostname = hostname.slice(1);
-    const additionalSubdomains = url.hostname.replace(slicedHostname, "").split(".").filter(Boolean);
-    return additionalSubdomains.length === 1;
-  }
-  return false;
-}
-function matchPathname(url, pathname, allowWildcard = false) {
-  if (!pathname) {
-    return true;
-  } else if (!allowWildcard || !pathname.endsWith("*")) {
-    return pathname === url.pathname;
-  } else if (pathname.endsWith("/**")) {
-    const slicedPathname = pathname.slice(0, -2);
-    return slicedPathname !== url.pathname && url.pathname.startsWith(slicedPathname);
-  } else if (pathname.endsWith("/*")) {
-    const slicedPathname = pathname.slice(0, -1);
-    const additionalPathChunks = url.pathname.replace(slicedPathname, "").split("/").filter(Boolean);
-    return additionalPathChunks.length === 1;
-  }
-  return false;
-}
-function isRemoteAllowed(src, {
-  domains,
-  remotePatterns
-}) {
-  if (!URL.canParse(src)) {
-    return false;
-  }
-  const url = new URL(src);
-  return domains.some((domain) => matchHostname(url, domain)) || remotePatterns.some((remotePattern) => matchPattern(url, remotePattern));
-}
-
 function isESMImportedImage(src) {
   return typeof src === "object" || typeof src === "function" && "src" in src;
 }
@@ -175,220 +126,6 @@ function isLocalService(service) {
     return false;
   }
   return "transform" in service;
-}
-function parseQuality(quality) {
-  let result = parseInt(quality);
-  if (Number.isNaN(result)) {
-    return quality;
-  }
-  return result;
-}
-const sortNumeric = (a, b) => a - b;
-const baseService = {
-  validateOptions(options) {
-    if (!options.src || !isRemoteImage(options.src) && !isESMImportedImage(options.src)) {
-      throw new AstroError({
-        ...ExpectedImage,
-        message: ExpectedImage.message(
-          JSON.stringify(options.src),
-          typeof options.src,
-          JSON.stringify(options, (_, v) => v === void 0 ? null : v)
-        )
-      });
-    }
-    if (!isESMImportedImage(options.src)) {
-      if (options.src.startsWith("/@fs/") || !isRemotePath(options.src) && !options.src.startsWith("/")) {
-        throw new AstroError({
-          ...LocalImageUsedWrongly,
-          message: LocalImageUsedWrongly.message(options.src)
-        });
-      }
-      let missingDimension;
-      if (!options.width && !options.height) {
-        missingDimension = "both";
-      } else if (!options.width && options.height) {
-        missingDimension = "width";
-      } else if (options.width && !options.height) {
-        missingDimension = "height";
-      }
-      if (missingDimension) {
-        throw new AstroError({
-          ...MissingImageDimension,
-          message: MissingImageDimension.message(missingDimension, options.src)
-        });
-      }
-    } else {
-      if (!VALID_SUPPORTED_FORMATS.includes(options.src.format)) {
-        throw new AstroError({
-          ...UnsupportedImageFormat,
-          message: UnsupportedImageFormat.message(
-            options.src.format,
-            options.src.src,
-            VALID_SUPPORTED_FORMATS
-          )
-        });
-      }
-      if (options.widths && options.densities) {
-        throw new AstroError(IncompatibleDescriptorOptions);
-      }
-      if (options.src.format === "svg") {
-        options.format = "svg";
-      }
-      if (options.src.format === "svg" && options.format !== "svg" || options.src.format !== "svg" && options.format === "svg") {
-        throw new AstroError(UnsupportedImageConversion);
-      }
-    }
-    if (!options.format) {
-      options.format = DEFAULT_OUTPUT_FORMAT;
-    }
-    if (options.width) options.width = Math.round(options.width);
-    if (options.height) options.height = Math.round(options.height);
-    if (options.layout && options.width && options.height) {
-      options.fit ??= "cover";
-      delete options.layout;
-    }
-    if (options.fit === "none") {
-      delete options.fit;
-    }
-    return options;
-  },
-  getHTMLAttributes(options) {
-    const { targetWidth, targetHeight } = getTargetDimensions(options);
-    const {
-      src,
-      width,
-      height,
-      format,
-      quality,
-      densities,
-      widths,
-      formats,
-      layout,
-      priority,
-      fit,
-      position,
-      ...attributes
-    } = options;
-    return {
-      ...attributes,
-      width: targetWidth,
-      height: targetHeight,
-      loading: attributes.loading ?? "lazy",
-      decoding: attributes.decoding ?? "async"
-    };
-  },
-  getSrcSet(options) {
-    const { targetWidth, targetHeight } = getTargetDimensions(options);
-    const aspectRatio = targetWidth / targetHeight;
-    const { widths, densities } = options;
-    const targetFormat = options.format ?? DEFAULT_OUTPUT_FORMAT;
-    let transformedWidths = (widths ?? []).sort(sortNumeric);
-    let imageWidth = options.width;
-    let maxWidth = Infinity;
-    if (isESMImportedImage(options.src)) {
-      imageWidth = options.src.width;
-      maxWidth = imageWidth;
-      if (transformedWidths.length > 0 && transformedWidths.at(-1) > maxWidth) {
-        transformedWidths = transformedWidths.filter((width) => width <= maxWidth);
-        transformedWidths.push(maxWidth);
-      }
-    }
-    transformedWidths = Array.from(new Set(transformedWidths));
-    const {
-      width: transformWidth,
-      height: transformHeight,
-      ...transformWithoutDimensions
-    } = options;
-    let allWidths = [];
-    if (densities) {
-      const densityValues = densities.map((density) => {
-        if (typeof density === "number") {
-          return density;
-        } else {
-          return parseFloat(density);
-        }
-      });
-      const densityWidths = densityValues.sort(sortNumeric).map((density) => Math.round(targetWidth * density));
-      allWidths = densityWidths.map((width, index) => ({
-        width,
-        descriptor: `${densityValues[index]}x`
-      }));
-    } else if (transformedWidths.length > 0) {
-      allWidths = transformedWidths.map((width) => ({
-        width,
-        descriptor: `${width}w`
-      }));
-    }
-    return allWidths.map(({ width, descriptor }) => {
-      const height = Math.round(width / aspectRatio);
-      const transform = { ...transformWithoutDimensions, width, height };
-      return {
-        transform,
-        descriptor,
-        attributes: {
-          type: `image/${targetFormat}`
-        }
-      };
-    });
-  },
-  getURL(options, imageConfig) {
-    const searchParams = new URLSearchParams();
-    if (isESMImportedImage(options.src)) {
-      searchParams.append("href", options.src.src);
-    } else if (isRemoteAllowed(options.src, imageConfig)) {
-      searchParams.append("href", options.src);
-    } else {
-      return options.src;
-    }
-    const params = {
-      w: "width",
-      h: "height",
-      q: "quality",
-      f: "format",
-      fit: "fit",
-      position: "position"
-    };
-    Object.entries(params).forEach(([param, key]) => {
-      options[key] && searchParams.append(param, options[key].toString());
-    });
-    const imageEndpoint = joinPaths("/", imageConfig.endpoint.route);
-    return `${imageEndpoint}?${searchParams}`;
-  },
-  parseURL(url) {
-    const params = url.searchParams;
-    if (!params.has("href")) {
-      return void 0;
-    }
-    const transform = {
-      src: params.get("href"),
-      width: params.has("w") ? parseInt(params.get("w")) : void 0,
-      height: params.has("h") ? parseInt(params.get("h")) : void 0,
-      format: params.get("f"),
-      quality: params.get("q"),
-      fit: params.get("fit"),
-      position: params.get("position") ?? void 0
-    };
-    return transform;
-  }
-};
-function getTargetDimensions(options) {
-  let targetWidth = options.width;
-  let targetHeight = options.height;
-  if (isESMImportedImage(options.src)) {
-    const aspectRatio = options.src.width / options.src.height;
-    if (targetHeight && !targetWidth) {
-      targetWidth = Math.round(targetHeight * aspectRatio);
-    } else if (targetWidth && !targetHeight) {
-      targetHeight = Math.round(targetWidth / aspectRatio);
-    } else if (!targetWidth && !targetHeight) {
-      targetWidth = options.src.width;
-      targetHeight = options.src.height;
-    }
-  }
-  return {
-    targetWidth,
-    targetHeight
-  };
 }
 
 function isImageMetadata(src) {
@@ -526,9 +263,11 @@ const GIF = {
 
 const brandMap = {
   avif: "avif",
+  avis: "avif",
+  // avif-sequence
   mif1: "heif",
   msf1: "heif",
-  // hief-sequence
+  // heif-sequence
   heic: "heic",
   heix: "heic",
   hevc: "heic",
@@ -544,7 +283,7 @@ function detectBrands(buffer, start, end) {
       brandsDetected[brand] = 1;
     }
   }
-  if ("avif" in brandsDetected) {
+  if ("avif" in brandsDetected || "avis" in brandsDetected) {
     return "avif";
   } else if ("heic" in brandsDetected || "heix" in brandsDetected || "hevc" in brandsDetected || "hevx" in brandsDetected) {
     return "heic";
@@ -1234,7 +973,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_DIjTcjeu.mjs'
+      '@astrojs/netlify/image-service.js'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
@@ -1273,14 +1012,12 @@ async function getImage$1(options, imageConfig) {
   };
   let originalWidth;
   let originalHeight;
-  let originalFormat;
   if (options.inferSize && isRemoteImage(resolvedOptions.src) && isRemotePath(resolvedOptions.src)) {
     const result = await inferRemoteSize(resolvedOptions.src);
     resolvedOptions.width ??= result.width;
     resolvedOptions.height ??= result.height;
     originalWidth = result.width;
     originalHeight = result.height;
-    originalFormat = result.format;
     delete resolvedOptions.inferSize;
   }
   const originalFilePath = isESMImportedImage(resolvedOptions.src) ? resolvedOptions.src.fsPath : void 0;
@@ -1291,7 +1028,6 @@ async function getImage$1(options, imageConfig) {
   if (isESMImportedImage(clonedSrc)) {
     originalWidth = clonedSrc.width;
     originalHeight = clonedSrc.height;
-    originalFormat = clonedSrc.format;
   }
   if (originalWidth && originalHeight) {
     const aspectRatio = originalWidth / originalHeight;
@@ -1337,12 +1073,12 @@ async function getImage$1(options, imageConfig) {
   const validatedOptions = service.validateOptions ? await service.validateOptions(resolvedOptions, imageConfig) : resolvedOptions;
   const srcSetTransforms = service.getSrcSet ? await service.getSrcSet(validatedOptions, imageConfig) : [];
   let imageURL = await service.getURL(validatedOptions, imageConfig);
-  const matchesOriginal = (transform) => transform.width === originalWidth && transform.height === originalHeight && transform.format === originalFormat;
+  const matchesValidatedTransform = (transform) => transform.width === validatedOptions.width && transform.height === validatedOptions.height && transform.format === validatedOptions.format;
   let srcSets = await Promise.all(
     srcSetTransforms.map(async (srcSet) => {
       return {
         transform: srcSet.transform,
-        url: matchesOriginal(srcSet.transform) ? imageURL : await service.getURL(srcSet.transform, imageConfig),
+        url: matchesValidatedTransform(srcSet.transform) ? imageURL : await service.getURL(srcSet.transform, imageConfig),
         descriptor: srcSet.descriptor,
         attributes: srcSet.attributes
       };
@@ -1358,7 +1094,7 @@ async function getImage$1(options, imageConfig) {
     srcSets = srcSetTransforms.map((srcSet) => {
       return {
         transform: srcSet.transform,
-        url: matchesOriginal(srcSet.transform) ? imageURL : globalThis.astroAsset.addStaticImage(srcSet.transform, propsToHash, originalFilePath),
+        url: matchesValidatedTransform(srcSet.transform) ? imageURL : globalThis.astroAsset.addStaticImage(srcSet.transform, propsToHash, originalFilePath),
         descriptor: srcSet.descriptor,
         attributes: srcSet.attributes
       };
@@ -1499,16 +1235,7 @@ const $$Font = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${preload && data.preloadData.map(({ url, type }) => renderTemplate`<link rel="preload"${addAttribute(url, "href")} as="font"${addAttribute(`font/${type}`, "type")} crossorigin>`)}<style>${unescapeHTML(data.css)}</style>`;
 }, "/Users/chuy/Desktop/MyPortfolioDev/node_modules/astro/components/Font.astro", void 0);
 
-const imageConfig = {"endpoint":{"route":"/_image"},"service":{"entrypoint":"astro/assets/services/sharp","config":{}},"domains":[],"remotePatterns":[],"responsiveStyles":false};
+const imageConfig = {"endpoint":{"route":"/_image"},"service":{"entrypoint":"@astrojs/netlify/image-service.js","config":{}},"domains":[],"remotePatterns":[],"responsiveStyles":false};
 							const getImage = async (options) => await getImage$1(options, imageConfig);
 
-const _astro_assets = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
-  __proto__: null,
-  getConfiguredImageService,
-  getImage,
-  imageConfig,
-  inferRemoteSize,
-  isLocalService
-}, Symbol.toStringTag, { value: 'Module' }));
-
-export { _astro_assets as _, isRemoteAllowed as a, baseService as b, getConfiguredImageService as g, imageConfig as i, parseQuality as p };
+export { $$Font as Font, $$Image as Image, $$Picture as Picture, getConfiguredImageService, getImage, imageConfig, inferRemoteSize, isLocalService };

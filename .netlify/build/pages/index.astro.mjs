@@ -1,13 +1,12 @@
-import { c as createComponent, m as maybeRenderHead, b as renderTemplate, a as createAstro, h as addAttribute, i as renderHead, j as renderSlot, r as renderComponent, k as renderScript, l as Fragment } from '../chunks/astro/server_D19AQUrQ.mjs';
+import { c as createComponent, m as maybeRenderHead, b as renderTemplate, a as createAstro, h as addAttribute, i as renderHead, j as renderSlot, r as renderComponent, k as renderScript, l as Fragment } from '../chunks/astro/server_BFaFQWjG.mjs';
 import 'kleur/colors';
 import 'clsx';
 /* empty css                                 */
-import { $ as $$NavItem } from '../chunks/NavItem_BpCmbTz5.mjs';
+import { $ as $$NavItem } from '../chunks/NavItem_BTTYfv7e.mjs';
 /* empty css                                 */
 import { M as MySQL, C as Cpp, a as TailwindCSS, N as Nextjs, b as Nodejs, c as AWS, T as TypeScript, Q as Qt, G as Github, F as Figma, d as Texas, e as NXP, f as ATMEL, W as Windows, g as Apple, B as Bash, h as GraphQL, J as JavaScript, i as CSharp, S as ST, E as Espressif, j as Microchip, k as Flutter, A as AstroI, l as Microsoft, m as Android, n as Markdown, D as Docker, R as RaspberryPI, L as Linux, o as LVGL, p as C } from '../chunks/Icons_BZHduql6.mjs';
 import { jsxs, jsx } from 'react/jsx-runtime';
 import { useState } from 'react';
-import { T as TagTopic } from '../chunks/Tags_CObP1I8n.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Logo = createComponent(($$result, $$props, $$slots) => {
@@ -279,21 +278,8 @@ const prerender = false;
 const $$Index = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$Index;
-  const subdomain = Astro2.locals.subdomain?.toLowerCase();
-  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Jesus Velez Soto" }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<nav id="navbar" class="flex gap-7 flex-row justify-center mt-12 mb-16 z-100"> ${renderComponent($$result2, "NavItem", $$NavItem, { "title": "Experience", "href": "https://jesusvelez.xyz#Experiencia" })} ${renderComponent($$result2, "NavItem", $$NavItem, { "title": "Projects", "href": "https://jesusvelez.xyz#Projects" })} ${renderComponent($$result2, "NavItem", $$NavItem, { "title": "Blog", "href": "https://blog.jesusvelez.xyz" })} </nav> ${subdomain === "blog" ? renderTemplate`${renderComponent($$result2, "Fragment", Fragment, {}, { "default": ($$result3) => renderTemplate` <div class="flex w-full items-center justify-center flex-col mb-[5rem]"> <section class="h-[500px] flex flex-col w-[80%]"> <div class="py-3 px-4 mx-auto max-w-screen-xl text-center lg:py-10"> <h1 class="mb-2 text-4xl font-extrabold tracking-tight leading-none md:text-5xl lg:text-8xl text-white">
-Find your Dev problem here
-</h1> <h1 class="mb-10 text-2xl font-extrabold tracking-tight leading-none md:text-4xl lg:text-6xl text-white">
-Was my problem too
-</h1> <p class=" text-lg font-normal text-gray-500 lg:text-xl sm:px-16 lg:px-48 dark:text-gray-400">
-Find my Tech Tips & Clicks for <br>
-VsCode, Linux & Microcontrollers Problematics
-</p> </div> <a href="/Blog/Posts" class="md:mr-[200px] md:self-end text-white hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-lg px-7 py-4 text-center inline-flex justify-center items-center bg-blue-600 dark:hover:bg-51E4B8 dark:focus:ring-blue-800">
-Let's check Post
-<svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"></path> </svg> </a> </section> </div> <div class="flex w-full items-center justify-center flex-col gap-[30px]"> <h1 class="font-extrabold tracking-tight leading-none text-5xl text-white">
-Popular Posts
-</h1> <div class="sm:grid lg:grid-cols-3 lg:grid-rows-3 sm:gap-4 w-[80%] sm:h-[800px] md:grid-rows-3 md:grid-cols-2 sm:w-[90%] max-sm:flex max-sm:flex-col max-sm:items-center max-sm:gap-10"> <div class="border-solid border border-sky-500 lg:row-span-2 rounded-md relative max-sm:w-[80%] max-sm:h-[230px]"> ${renderComponent($$result3, "TagTopic", TagTopic, { "type": "qt" })} </div> <div class="border-solid border border-sky-500 rounded-md relative max-sm:w-[80%] max-sm:h-[230px]"> ${renderComponent($$result3, "TagTopic", TagTopic, { "type": "bbb" })} </div> <div class="border-solid border border-sky-500 lg:col-start-2 lg:row-start-2 rounded-md relative max-sm:w-[80%] max-sm:h-[230px]"> ${renderComponent($$result3, "TagTopic", TagTopic, { "type": "raspberry" })} </div> <div class="border-solid border border-sky-500 lg:row-span-2 lg:col-start-3 row-start-1 rounded-md relative max-sm:w-[80%] max-sm:h-[230px]"> ${renderComponent($$result3, "TagTopic", TagTopic, { "type": "linux" })} </div> <div class="border-solid border border-sky-500 lg:col-span-2 lg:col-start-2 lg:row-start-3 rounded-md relative max-sm:w-[80%] max-sm:h-[230px]"> ${renderComponent($$result3, "TagTopic", TagTopic, { "type": "vscode" })} </div> <div class="border-solid border border-sky-500 lg:col-start-1 lg:ow-start-3 rounded-md relative max-sm:w-[80%] max-sm:h-[230px]"> ${renderComponent($$result3, "TagTopic", TagTopic, { "type": "vscode" })} </div> </div> <a href="/" class="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-lg px-6 py-3.5 text-center me-2 mb-2">
-All Posts
-</a> </div> ` })}` : renderTemplate`${renderComponent($$result2, "Fragment", Fragment, {}, { "default": ($$result3) => renderTemplate` ${renderComponent($$result3, "Logo", $$Logo, {})} <div class="flex items-center w-full justify-center mb-10"> <span class="relative inline-flex overflow-hidden rounded-full p-[1px]"> <span class="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#51E4B8_0%,#21554E_50%,#51E4B8_100%)]"></span> <a href="https://www.linkedin.com/in/jesus-velez-soto-28ab11156/" class="inline-flex items-center justify-center w-full px-3 py-1 text-lg text-green-800 bg-green-100 rounded-full cursor-pointer dark:bg-gray-800 dark:text-white/80 backdrop-blur-3xl whitespace-nowrap">
+  const subdomain = Astro2.locals.subdomain?.toLowerCase() || "";
+  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Jesus Velez Soto" }, { "default": ($$result2) => renderTemplate`${subdomain === "" && renderTemplate`${renderComponent($$result2, "Fragment", Fragment, {}, { "default": ($$result3) => renderTemplate` ${maybeRenderHead()}<nav id="navbar" class="flex gap-7 flex-row justify-center mt-12 mb-16 z-100"> ${renderComponent($$result3, "NavItem", $$NavItem, { "title": "Experience", "href": "#Experiencia" })} ${renderComponent($$result3, "NavItem", $$NavItem, { "title": "Projects", "href": "#Projects" })} ${renderComponent($$result3, "NavItem", $$NavItem, { "title": "Blog", "href": "https://blog.jesusvelez.dev" })} </nav> ${renderComponent($$result3, "Logo", $$Logo, {})} <div class="flex items-center w-full justify-center mb-10"> <span class="relative inline-flex overflow-hidden rounded-full p-[1px]"> <span class="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#51E4B8_0%,#21554E_50%,#51E4B8_100%)]"></span> <a href="https://www.linkedin.com/in/jesus-velez-soto-28ab11156/" class="inline-flex items-center justify-center w-full px-3 py-1 text-lg text-green-800 bg-green-100 rounded-full cursor-pointer dark:bg-gray-800 dark:text-white/80 backdrop-blur-3xl whitespace-nowrap">
 Open to Work
 </a> </span> </div> <section class="flex items-center w-full justify-center mb-[100px]"> <p class="text-3xl max-sm:text-base text-white mt-10 text-wrap w-[90%] md:w-[40%] text-center">
 3 años de experiencia como<br> <span class="text-[#51E4B8]"> ${" "}
@@ -302,7 +288,7 @@ Ingeniero de Software.
 Freelancee
 </span> <br>
 🇲🇽 Especializado en Aplicaciones Web
-						y Dispositivos Embebidos con Linux.
+					y Dispositivos Embebidos con Linux.
 </p> </section> <div class="w-full flex items-center justify-center flex-col mt-[100px]" id="Experiencia"> <h1 class="text-5xl font-semibold text-white my-5">
 Experiencia
 </h1> ${renderComponent($$result3, "Experience", $$Experience, {})} </div> <div class="w-full flex items-center justify-center flex-col mt-[200px]" id="Skills"> <h1 class="text-5xl font-semibold text-white my-5">
@@ -311,6 +297,7 @@ Skills
 Proyectos
 </h1> ${renderComponent($$result3, "Proyects", $$Proyects, {})} </div> ` })}`}` })} ${renderScript($$result, "/Users/chuy/Desktop/MyPortfolioDev/src/pages/index.astro?astro&type=script&index=0&lang.ts")}`;
 }, "/Users/chuy/Desktop/MyPortfolioDev/src/pages/index.astro", void 0);
+
 const $$file = "/Users/chuy/Desktop/MyPortfolioDev/src/pages/index.astro";
 const $$url = "";
 
