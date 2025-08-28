@@ -3,6 +3,7 @@ import 'kleur/colors';
 import 'clsx';
 /* empty css                                 */
 import { $ as $$NavItem } from '../chunks/NavItem_BTTYfv7e.mjs';
+/* empty css                                  */
 /* empty css                                 */
 import { M as MySQL, C as Cpp, a as TailwindCSS, N as Nextjs, b as Nodejs, c as AWS, T as TypeScript, Q as Qt, G as Github, F as Figma, d as Texas, e as NXP, f as ATMEL, W as Windows, g as Apple, B as Bash, h as GraphQL, J as JavaScript, i as CSharp, S as ST, E as Espressif, j as Microchip, k as Flutter, A as AstroI, l as Microsoft, m as Android, n as Markdown, D as Docker, R as RaspberryPI, L as Linux, o as LVGL, p as C } from '../chunks/Icons_BZHduql6.mjs';
 import { jsxs, jsx } from 'react/jsx-runtime';

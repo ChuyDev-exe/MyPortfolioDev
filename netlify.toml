@@ -7,22 +7,35 @@
 
 # Configuración para el dominio principal (portfolio)
 [[redirects]]
-  from = "https://jesusvelez.dev/Blog/*"
-  to = "https://blog.jesusvelez.dev/Blog/:splat"
+  from = "https://jesusvelez.xyz/Blog/*"
+  to = "https://blog.jesusvelez.xyz/Blog/:splat"
   status = 301
   force = true
 
 [[redirects]]
-  from = "https://jesusvelez.dev/DevBlog"
-  to = "https://blog.jesusvelez.dev/DevBlog"
+  from = "https://jesusvelez.xyz/DevBlog"
+  to = "https://blog.jesusvelez.xyz/DevBlog"
   status = 301
   force = true
 
 # Configuración para el subdominio blog
 [[redirects]]
-  from = "https://blog.jesusvelez.dev/"
-  to = "https://blog.jesusvelez.dev/DevBlog"
+  from = "https://blog.jesusvelez.xyz/"
+  to = "https://blog.jesusvelez.xyz/DevBlog"
   status = 200
+
+# Configuración específica del subdominio blog - mapear todas las rutas del blog
+[[redirects]]
+  from = "https://blog.jesusvelez.xyz/Blog/*"
+  to = "/Blog/:splat"
+  status = 200
+  headers = { Host = "blog.jesusvelez.xyz" }
+
+[[redirects]]
+  from = "https://blog.jesusvelez.xyz/DevBlog"
+  to = "/DevBlog"
+  status = 200
+  headers = { Host = "blog.jesusvelez.xyz" }
 
 # Manejar rutas SPA
 [[redirects]]
