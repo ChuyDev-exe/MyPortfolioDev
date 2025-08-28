@@ -21,7 +21,7 @@ import "@fontsource-variable/onest";
 		/>
 		<title>{title}</title>
 	</head>
-	<body class="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+	<body class="min-h-screen">
 		<div class="max-w-screen-2xl mx-auto px-6 lg:px-8">
 			<slot />
 		</div>
@@ -34,12 +34,8 @@ import "@fontsource-variable/onest";
 
 	body {
 		font-family: "Onest Variable", system-ui, sans-serif;
-		background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+		background-color: #050d15;
 		overscroll-behavior: none;
-	}
-
-	.dark body {
-		background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
