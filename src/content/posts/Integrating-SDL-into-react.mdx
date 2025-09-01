@@ -1,0 +1,1533 @@
+---
+title: Integrating SDL into React - Game Development Guide
+date: 2024-06-25
+description: Complete guide to integrating SDL (Simple DirectMedia Layer) with React applications for game development and multimedia applications.
+author: Jesus Velez
+tags: [SDL, React, JavaScript, WebAssembly, Game Development, C++]
+layout: ../../layouts/PostLayout.astro
+---
+
+# Integrating SDL into React - Game Development Guide
+
+SDL (Simple DirectMedia Layer) is a powerful cross-platform multimedia library that provides low-level access to audio, keyboard, mouse, and graphics hardware. In this comprehensive guide, we'll learn how to integrate SDL with React applications for creating games and multimedia applications.
+
+## Understanding SDL and React Integration
+
+### Why Combine SDL with React?
+
+- **Performance**: SDL provides hardware-accelerated graphics and audio
+- **Cross-platform**: Write once, run everywhere
+- **React Ecosystem**: Leverage React's component system and state management
+- **Modern Development**: Combine low-level graphics with modern web development
+- **WebAssembly**: Compile C/C++ SDL code to run in the browser
+
+### Architecture Overview
+
+```
+React Application
+├── SDL Canvas Component
+├── Game Logic (JavaScript/TypeScript)
+├── SDL Wrapper (WebAssembly)
+└── Asset Management
+```
+
+## Environment Setup
+
+### Prerequisites Installation
+
+```bash
+# Install Emscripten for WebAssembly compilation
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+./emsdk install latest
+./emsdk activate latest
+source ./emsdk_env.sh
+
+# Create React project
+npx create-react-app sdl-react-game --template typescript
+cd sdl-react-game
+
+# Install additional dependencies
+npm install --save-dev @types/emscripten
+```
+
+### Project Structure Setup
+
+```bash
+# Create project directories
+mkdir -p src/{components,game,assets,wasm}
+mkdir -p public/assets/{sprites,sounds,music}
+mkdir -p wasm-src
+
+# Project structure
+src/
+├── components/
+│   ├── GameCanvas.tsx
+│   ├── GameControls.tsx
+│   └── GameUI.tsx
+├── game/
+│   ├── GameEngine.ts
+│   ├── GameState.ts
+│   └── InputManager.ts
+├── assets/
+│   └── AssetLoader.ts
+├── wasm/
+│   └── sdl-wrapper.d.ts
+└── App.tsx
+
+wasm-src/
+├── main.cpp
+├── game.cpp
+├── renderer.cpp
+└── CMakeLists.txt
+```
+
+## SDL WebAssembly Implementation
+
+### Core SDL Wrapper (C++)
+
+```cpp
+// wasm-src/main.cpp
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#include <iostream>
+#include <vector>
+#include <map>
+#include <memory>
+
+class SDLRenderer {
+private:
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Texture* backBuffer;
+    int width, height;
+    bool initialized;
+
+public:
+    SDLRenderer() : window(nullptr), renderer(nullptr), 
+                   backBuffer(nullptr), initialized(false) {}
+
+    bool initialize(int w, int h) {
+        width = w;
+        height = h;
+
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+            std::cout << "SDL initialization failed: " << SDL_GetError() << std::endl;
+            return false;
+        }
+
+        // Initialize SDL_image
+        int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
+        if (!(IMG_Init(imgFlags) & imgFlags)) {
+            std::cout << "SDL_image initialization failed: " << IMG_GetError() << std::endl;
+            return false;
+        }
+
+        // Initialize SDL_ttf
+        if (TTF_Init() == -1) {
+            std::cout << "SDL_ttf initialization failed: " << TTF_GetError() << std::endl;
+            return false;
+        }
+
+        // Initialize SDL_mixer
+        if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+            std::cout << "SDL_mixer initialization failed: " << Mix_GetError() << std::endl;
+            return false;
+        }
+
+        // Create window
+        window = SDL_CreateWindow("SDL React Game",
+                                 SDL_WINDOWPOS_UNDEFINED,
+                                 SDL_WINDOWPOS_UNDEFINED,
+                                 width, height,
+                                 SDL_WINDOW_SHOWN);
+
+        if (!window) {
+            std::cout << "Window creation failed: " << SDL_GetError() << std::endl;
+            return false;
+        }
+
+        // Create renderer
+        renderer = SDL_CreateRenderer(window, -1, 
+                                    SDL_RENDERER_ACCELERATED | 
+                                    SDL_RENDERER_PRESENTVSYNC);
+
+        if (!renderer) {
+            std::cout << "Renderer creation failed: " << SDL_GetError() << std::endl;
+            return false;
+        }
+
+        // Create back buffer texture
+        backBuffer = SDL_CreateTexture(renderer,
+                                      SDL_PIXELFORMAT_RGBA8888,
+                                      SDL_TEXTUREACCESS_TARGET,
+                                      width, height);
+
+        initialized = true;
+        return true;
+    }
+
+    void clear(Uint8 r = 0, Uint8 g = 0, Uint8 b = 0, Uint8 a = 255) {
+        if (!initialized) return;
+        
+        SDL_SetRenderTarget(renderer, backBuffer);
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+        SDL_RenderClear(renderer);
+    }
+
+    void drawRect(int x, int y, int w, int h, 
+                  Uint8 r, Uint8 g, Uint8 b, Uint8 a = 255) {
+        if (!initialized) return;
+        
+        SDL_Rect rect = {x, y, w, h};
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+        SDL_RenderFillRect(renderer, &rect);
+    }
+
+    void drawCircle(int centerX, int centerY, int radius,
+                   Uint8 r, Uint8 g, Uint8 b, Uint8 a = 255) {
+        if (!initialized) return;
+        
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+        
+        // Simple circle drawing algorithm
+        for (int w = 0; w < radius * 2; w++) {
+            for (int h = 0; h < radius * 2; h++) {
+                int dx = radius - w;
+                int dy = radius - h;
+                if ((dx * dx + dy * dy) <= (radius * radius)) {
+                    SDL_RenderDrawPoint(renderer, centerX + dx, centerY + dy);
+                }
+            }
+        }
+    }
+
+    void present() {
+        if (!initialized) return;
+        
+        // Copy back buffer to main buffer
+        SDL_SetRenderTarget(renderer, nullptr);
+        SDL_RenderCopy(renderer, backBuffer, nullptr, nullptr);
+        SDL_RenderPresent(renderer);
+    }
+
+    void cleanup() {
+        if (backBuffer) SDL_DestroyTexture(backBuffer);
+        if (renderer) SDL_DestroyRenderer(renderer);
+        if (window) SDL_DestroyWindow(window);
+        
+        Mix_Quit();
+        TTF_Quit();
+        IMG_Quit();
+        SDL_Quit();
+        
+        initialized = false;
+    }
+
+    bool isInitialized() const { return initialized; }
+    SDL_Renderer* getRenderer() { return renderer; }
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
+};
+
+// Game entities and logic
+class GameObject {
+public:
+    float x, y;
+    float velocityX, velocityY;
+    int width, height;
+    Uint8 r, g, b, a;
+
+    GameObject(float x, float y, int w, int h) 
+        : x(x), y(y), velocityX(0), velocityY(0), 
+          width(w), height(h), r(255), g(255), b(255), a(255) {}
+
+    virtual void update(float deltaTime) {
+        x += velocityX * deltaTime;
+        y += velocityY * deltaTime;
+    }
+
+    virtual void render(SDLRenderer& renderer) {
+        renderer.drawRect(static_cast<int>(x), static_cast<int>(y), 
+                         width, height, r, g, b, a);
+    }
+
+    bool checkCollision(const GameObject& other) const {
+        return (x < other.x + other.width &&
+                x + width > other.x &&
+                y < other.y + other.height &&
+                y + height > other.y);
+    }
+};
+
+class Player : public GameObject {
+private:
+    float speed;
+
+public:
+    Player(float x, float y) : GameObject(x, y, 32, 32), speed(200.0f) {
+        r = 0; g = 255; b = 0; // Green color
+    }
+
+    void handleInput(bool left, bool right, bool up, bool down) {
+        velocityX = 0;
+        velocityY = 0;
+
+        if (left) velocityX = -speed;
+        if (right) velocityX = speed;
+        if (up) velocityY = -speed;
+        if (down) velocityY = speed;
+    }
+
+    void update(float deltaTime) override {
+        GameObject::update(deltaTime);
+        
+        // Keep player within screen bounds
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x + width > 800) x = 800 - width;
+        if (y + height > 600) y = 600 - height;
+    }
+};
+
+class Enemy : public GameObject {
+private:
+    float speed;
+    float directionTimer;
+
+public:
+    Enemy(float x, float y) : GameObject(x, y, 24, 24), speed(100.0f), directionTimer(0) {
+        r = 255; g = 0; b = 0; // Red color
+        
+        // Random initial direction
+        velocityX = (rand() % 2 == 0) ? speed : -speed;
+        velocityY = (rand() % 2 == 0) ? speed : -speed;
+    }
+
+    void update(float deltaTime) override {
+        directionTimer += deltaTime;
+        
+        // Change direction every 2 seconds
+        if (directionTimer > 2.0f) {
+            velocityX = (rand() % 2 == 0) ? speed : -speed;
+            velocityY = (rand() % 2 == 0) ? speed : -speed;
+            directionTimer = 0;
+        }
+
+        GameObject::update(deltaTime);
+        
+        // Bounce off screen edges
+        if (x <= 0 || x + width >= 800) velocityX = -velocityX;
+        if (y <= 0 || y + height >= 600) velocityY = -velocityY;
+        
+        // Keep within bounds
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x + width > 800) x = 800 - width;
+        if (y + height > 600) y = 600 - height;
+    }
+};
+
+// Global game state
+class GameState {
+public:
+    std::unique_ptr<Player> player;
+    std::vector<std::unique_ptr<Enemy>> enemies;
+    int score;
+    bool gameOver;
+    float enemySpawnTimer;
+
+    GameState() : score(0), gameOver(false), enemySpawnTimer(0) {
+        player = std::make_unique<Player>(400, 300);
+        
+        // Spawn initial enemies
+        for (int i = 0; i < 3; i++) {
+            enemies.push_back(std::make_unique<Enemy>(
+                rand() % 700 + 50,
+                rand() % 500 + 50
+            ));
+        }
+    }
+
+    void update(float deltaTime) {
+        if (gameOver) return;
+
+        player->update(deltaTime);
+        
+        for (auto& enemy : enemies) {
+            enemy->update(deltaTime);
+            
+            // Check collision with player
+            if (player->checkCollision(*enemy)) {
+                gameOver = true;
+            }
+        }
+
+        // Spawn new enemies periodically
+        enemySpawnTimer += deltaTime;
+        if (enemySpawnTimer > 5.0f) {
+            enemies.push_back(std::make_unique<Enemy>(
+                rand() % 700 + 50,
+                rand() % 500 + 50
+            ));
+            enemySpawnTimer = 0;
+            score += 10;
+        }
+    }
+
+    void render(SDLRenderer& renderer) {
+        renderer.clear(50, 50, 50); // Dark gray background
+
+        if (!gameOver) {
+            player->render(renderer);
+            
+            for (auto& enemy : enemies) {
+                enemy->render(renderer);
+            }
+        } else {
+            // Game over screen
+            renderer.drawRect(300, 250, 200, 100, 0, 0, 0, 200);
+            // Text would be rendered here with TTF
+        }
+
+        renderer.present();
+    }
+};
+
+// Global instances
+std::unique_ptr<SDLRenderer> g_renderer;
+std::unique_ptr<GameState> g_gameState;
+bool g_keys[4] = {false, false, false, false}; // left, right, up, down
+Uint32 g_lastTime = 0;
+
+// Main game loop
+void gameLoop() {
+    Uint32 currentTime = SDL_GetTicks();
+    float deltaTime = (currentTime - g_lastTime) / 1000.0f;
+    g_lastTime = currentTime;
+
+    // Handle events
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+            bool keyState = (event.type == SDL_KEYDOWN);
+            
+            switch (event.key.keysym.sym) {
+                case SDLK_LEFT:
+                case SDLK_a:
+                    g_keys[0] = keyState;
+                    break;
+                case SDLK_RIGHT:
+                case SDLK_d:
+                    g_keys[1] = keyState;
+                    break;
+                case SDLK_UP:
+                case SDLK_w:
+                    g_keys[2] = keyState;
+                    break;
+                case SDLK_DOWN:
+                case SDLK_s:
+                    g_keys[3] = keyState;
+                    break;
+            }
+        }
+    }
+
+    // Update game
+    if (g_gameState) {
+        if (g_gameState->player) {
+            g_gameState->player->handleInput(g_keys[0], g_keys[1], g_keys[2], g_keys[3]);
+        }
+        g_gameState->update(deltaTime);
+        g_gameState->render(*g_renderer);
+    }
+}
+
+// Exported functions for JavaScript
+extern "C" {
+    EMSCRIPTEN_KEEPALIVE
+    int initializeGame(int width, int height) {
+        g_renderer = std::make_unique<SDLRenderer>();
+        
+        if (!g_renderer->initialize(width, height)) {
+            return 0;
+        }
+
+        g_gameState = std::make_unique<GameState>();
+        g_lastTime = SDL_GetTicks();
+
+        // Set up main loop
+        emscripten_set_main_loop(gameLoop, 0, 1);
+        
+        return 1;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void handleKeyPress(int keyCode, int pressed) {
+        switch (keyCode) {
+            case 37: // Left arrow
+            case 65: // A key
+                g_keys[0] = pressed != 0;
+                break;
+            case 39: // Right arrow
+            case 68: // D key
+                g_keys[1] = pressed != 0;
+                break;
+            case 38: // Up arrow
+            case 87: // W key
+                g_keys[2] = pressed != 0;
+                break;
+            case 40: // Down arrow
+            case 83: // S key
+                g_keys[3] = pressed != 0;
+                break;
+        }
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int getScore() {
+        return g_gameState ? g_gameState->score : 0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int isGameOver() {
+        return g_gameState ? (g_gameState->gameOver ? 1 : 0) : 0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void restartGame() {
+        if (g_gameState) {
+            g_gameState = std::make_unique<GameState>();
+        }
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void cleanupGame() {
+        g_gameState.reset();
+        if (g_renderer) {
+            g_renderer->cleanup();
+            g_renderer.reset();
+        }
+    }
+}
+```
+
+### Build Configuration
+
+```cmake
+# wasm-src/CMakeLists.txt
+cmake_minimum_required(VERSION 3.16)
+project(SDLReactGame)
+
+set(CMAKE_CXX_STANDARD 17)
+
+# Emscripten-specific settings
+if(EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".js")
+    
+    # SDL2 ports
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -s USE_SDL_MIXER=2")
+    
+    # WebAssembly settings
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=1")
+    
+    # Export functions
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS='[\"_initializeGame\",\"_handleKeyPress\",\"_getScore\",\"_isGameOver\",\"_restartGame\",\"_cleanupGame\",\"_malloc\",\"_free\"]'")
+    
+    # Export runtime methods
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'")
+    
+    # Optimization
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -s ASSERTIONS=0")
+    
+    # Preload assets
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file assets")
+endif()
+
+# Source files
+add_executable(game
+    main.cpp
+)
+
+# Link libraries
+if(EMSCRIPTEN)
+    target_link_libraries(game)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SDL2 REQUIRED sdl2)
+    pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
+    pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf)
+    pkg_check_modules(SDL2_MIXER REQUIRED SDL2_mixer)
+    
+    target_link_libraries(game ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES})
+    target_include_directories(game PRIVATE ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS} ${SDL2_TTF_INCLUDE_DIRS} ${SDL2_MIXER_INCLUDE_DIRS})
+endif()
+```
+
+### Build Script
+
+```bash
+#!/bin/bash
+# build-wasm.sh
+
+echo "Building SDL React Game for WebAssembly..."
+
+# Navigate to wasm source directory
+cd wasm-src
+
+# Create build directory
+mkdir -p build
+cd build
+
+# Configure with Emscripten
+emcmake cmake .. -DCMAKE_BUILD_TYPE=Release
+
+# Build
+emmake make -j4
+
+# Copy output files to public directory
+cp game.js ../../public/
+cp game.wasm ../../public/
+
+echo "Build complete! Files copied to public directory."
+```
+
+## React Component Integration
+
+### Main Game Canvas Component
+
+```tsx
+// src/components/GameCanvas.tsx
+import React, { useEffect, useRef, useCallback, useState } from 'react';
+
+interface GameModule {
+  ccall: (name: string, returnType: string, argTypes: string[], args: any[]) => any;
+  cwrap: (name: string, returnType: string, argTypes: string[]) => Function;
+}
+
+interface GameCanvasProps {
+  width?: number;
+  height?: number;
+  onScoreChange?: (score: number) => void;
+  onGameOver?: () => void;
+}
+
+export const GameCanvas: React.FC<GameCanvasProps> = ({
+  width = 800,
+  height = 600,
+  onScoreChange,
+  onGameOver
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const moduleRef = useRef<GameModule | null>(null);
+  const [gameInitialized, setGameInitialized] = useState(false);
+  const [score, setScore] = useState(0);
+  const [isGameOver, setIsGameOver] = useState(false);
+
+  // Game functions
+  const initializeGameRef = useRef<Function | null>(null);
+  const handleKeyPressRef = useRef<Function | null>(null);
+  const getScoreRef = useRef<Function | null>(null);
+  const isGameOverRef = useRef<Function | null>(null);
+  const restartGameRef = useRef<Function | null>(null);
+  const cleanupGameRef = useRef<Function | null>(null);
+
+  // Load WebAssembly module
+  useEffect(() => {
+    const loadWasmModule = async () => {
+      try {
+        // Create script element to load the generated JavaScript
+        const script = document.createElement('script');
+        script.src = '/game.js';
+        script.async = true;
+
+        script.onload = () => {
+          // Access the Module object created by Emscripten
+          const Module = (window as any).Module;
+          
+          Module.onRuntimeInitialized = () => {
+            moduleRef.current = Module;
+
+            // Wrap exported functions
+            initializeGameRef.current = Module.cwrap('initializeGame', 'number', ['number', 'number']);
+            handleKeyPressRef.current = Module.cwrap('handleKeyPress', null, ['number', 'number']);
+            getScoreRef.current = Module.cwrap('getScore', 'number', []);
+            isGameOverRef.current = Module.cwrap('isGameOver', 'number', []);
+            restartGameRef.current = Module.cwrap('restartGame', null, []);
+            cleanupGameRef.current = Module.cwrap('cleanupGame', null, []);
+
+            // Initialize the game
+            if (initializeGameRef.current) {
+              const success = initializeGameRef.current(width, height);
+              if (success) {
+                setGameInitialized(true);
+                console.log('SDL Game initialized successfully');
+              } else {
+                console.error('Failed to initialize SDL game');
+              }
+            }
+          };
+        };
+
+        script.onerror = () => {
+          console.error('Failed to load WebAssembly module');
+        };
+
+        document.head.appendChild(script);
+
+        return () => {
+          document.head.removeChild(script);
+        };
+      } catch (error) {
+        console.error('Error loading WebAssembly module:', error);
+      }
+    };
+
+    loadWasmModule();
+  }, [width, height]);
+
+  // Handle keyboard input
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (handleKeyPressRef.current && gameInitialized) {
+      handleKeyPressRef.current(event.keyCode, 1);
+    }
+  }, [gameInitialized]);
+
+  const handleKeyUp = useCallback((event: KeyboardEvent) => {
+    if (handleKeyPressRef.current && gameInitialized) {
+      handleKeyPressRef.current(event.keyCode, 0);
+    }
+  }, [gameInitialized]);
+
+  // Set up event listeners
+  useEffect(() => {
+    if (gameInitialized) {
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+      };
+    }
+  }, [gameInitialized, handleKeyDown, handleKeyUp]);
+
+  // Game state polling
+  useEffect(() => {
+    if (!gameInitialized) return;
+
+    const pollGameState = () => {
+      if (getScoreRef.current && isGameOverRef.current) {
+        const currentScore = getScoreRef.current();
+        const gameOver = isGameOverRef.current() !== 0;
+
+        if (currentScore !== score) {
+          setScore(currentScore);
+          onScoreChange?.(currentScore);
+        }
+
+        if (gameOver !== isGameOver) {
+          setIsGameOver(gameOver);
+          if (gameOver) {
+            onGameOver?.();
+          }
+        }
+      }
+    };
+
+    const interval = setInterval(pollGameState, 100); // Poll every 100ms
+
+    return () => clearInterval(interval);
+  }, [gameInitialized, score, isGameOver, onScoreChange, onGameOver]);
+
+  // Restart game function
+  const handleRestartGame = useCallback(() => {
+    if (restartGameRef.current && gameInitialized) {
+      restartGameRef.current();
+      setScore(0);
+      setIsGameOver(false);
+    }
+  }, [gameInitialized]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (cleanupGameRef.current) {
+        cleanupGameRef.current();
+      }
+    };
+  }, []);
+
+  return (
+    <div className="game-canvas-container">
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        style={{
+          border: '2px solid #333',
+          display: 'block',
+          margin: '0 auto',
+          backgroundColor: '#000'
+        }}
+        tabIndex={0}
+      />
+      
+      {!gameInitialized && (
+        <div className="loading-overlay">
+          <p>Loading SDL Game...</p>
+        </div>
+      )}
+
+      {isGameOver && (
+        <div className="game-over-overlay">
+          <div className="game-over-modal">
+            <h2>Game Over!</h2>
+            <p>Final Score: {score}</p>
+            <button onClick={handleRestartGame}>Restart Game</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+```
+
+### Game Controls Component
+
+```tsx
+// src/components/GameControls.tsx
+import React from 'react';
+
+interface GameControlsProps {
+  score: number;
+  isGameOver: boolean;
+  onRestart: () => void;
+  onPause: () => void;
+  isPaused: boolean;
+}
+
+export const GameControls: React.FC<GameControlsProps> = ({
+  score,
+  isGameOver,
+  onRestart,
+  onPause,
+  isPaused
+}) => {
+  return (
+    <div className="game-controls">
+      <div className="score-display">
+        <h3>Score: {score}</h3>
+      </div>
+
+      <div className="control-buttons">
+        <button onClick={onRestart} className="control-button restart">
+          Restart Game
+        </button>
+        
+        <button 
+          onClick={onPause} 
+          className="control-button pause"
+          disabled={isGameOver}
+        >
+          {isPaused ? 'Resume' : 'Pause'}
+        </button>
+      </div>
+
+      <div className="instructions">
+        <h4>Controls:</h4>
+        <ul>
+          <li>WASD or Arrow Keys: Move player</li>
+          <li>Avoid red enemies</li>
+          <li>Survive as long as possible!</li>
+        </ul>
+      </div>
+
+      <style jsx>{`
+        .game-controls {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+          padding: 20px;
+          background: linear-gradient(145deg, #f0f0f0, #e6e6e6);
+          border-radius: 10px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-display h3 {
+          margin: 0;
+          font-size: 1.5em;
+          color: #333;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-buttons {
+          display: flex;
+          gap: 15px;
+        }
+
+        .control-button {
+          padding: 12px 24px;
+          border: none;
+          border-radius: 25px;
+          font-size: 1em;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .control-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-button:active {
+          transform: translateY(0);
+        }
+
+        .control-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .restart {
+          background: linear-gradient(145deg, #4CAF50, #45a049);
+          color: white;
+        }
+
+        .pause {
+          background: linear-gradient(145deg, #2196F3, #1976D2);
+          color: white;
+        }
+
+        .instructions {
+          text-align: center;
+          color: #666;
+        }
+
+        .instructions h4 {
+          margin-bottom: 10px;
+          color: #333;
+        }
+
+        .instructions ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        .instructions li {
+          margin: 5px 0;
+          padding: 5px 10px;
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 15px;
+          display: inline-block;
+          margin-right: 5px;
+        }
+
+        @media (max-width: 768px) {
+          .control-buttons {
+            flex-direction: column;
+          }
+          
+          .control-button {
+            width: 100%;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+```
+
+### Main App Integration
+
+```tsx
+// src/App.tsx
+import React, { useState, useCallback } from 'react';
+import { GameCanvas } from './components/GameCanvas';
+import { GameControls } from './components/GameControls';
+import './App.css';
+
+interface GameStats {
+  score: number;
+  highScore: number;
+  gamesPlayed: number;
+}
+
+function App() {
+  const [gameStats, setGameStats] = useState<GameStats>({
+    score: 0,
+    highScore: parseInt(localStorage.getItem('sdl-react-high-score') || '0'),
+    gamesPlayed: parseInt(localStorage.getItem('sdl-react-games-played') || '0')
+  });
+  
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
+
+  const handleScoreChange = useCallback((score: number) => {
+    setGameStats(prev => ({
+      ...prev,
+      score
+    }));
+  }, []);
+
+  const handleGameOver = useCallback(() => {
+    setIsGameOver(true);
+    
+    setGameStats(prev => {
+      const newHighScore = Math.max(prev.score, prev.highScore);
+      const newGamesPlayed = prev.gamesPlayed + 1;
+      
+      // Save to localStorage
+      localStorage.setItem('sdl-react-high-score', newHighScore.toString());
+      localStorage.setItem('sdl-react-games-played', newGamesPlayed.toString());
+      
+      return {
+        ...prev,
+        highScore: newHighScore,
+        gamesPlayed: newGamesPlayed
+      };
+    });
+  }, []);
+
+  const handleRestart = useCallback(() => {
+    setIsGameOver(false);
+    setGameStats(prev => ({ ...prev, score: 0 }));
+  }, []);
+
+  const handlePause = useCallback(() => {
+    setIsPaused(prev => !prev);
+  }, []);
+
+  const dismissInstructions = useCallback(() => {
+    setShowInstructions(false);
+  }, []);
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h1>SDL + React Game</h1>
+        <div className="stats-bar">
+          <span>High Score: {gameStats.highScore}</span>
+          <span>Games Played: {gameStats.gamesPlayed}</span>
+        </div>
+      </header>
+
+      {showInstructions && (
+        <div className="instructions-modal">
+          <div className="modal-content">
+            <h2>Welcome to SDL + React Game!</h2>
+            <p>This game demonstrates the integration of SDL with React using WebAssembly.</p>
+            <ul>
+              <li>Use WASD or Arrow Keys to move the green player</li>
+              <li>Avoid the red enemies</li>
+              <li>Enemies spawn faster as your score increases</li>
+              <li>Try to survive as long as possible!</li>
+            </ul>
+            <button onClick={dismissInstructions} className="start-button">
+              Start Playing
+            </button>
+          </div>
+        </div>
+      )}
+
+      <main className="game-container">
+        <div className="game-area">
+          <GameCanvas
+            width={800}
+            height={600}
+            onScoreChange={handleScoreChange}
+            onGameOver={handleGameOver}
+          />
+        </div>
+
+        <aside className="controls-area">
+          <GameControls
+            score={gameStats.score}
+            isGameOver={isGameOver}
+            onRestart={handleRestart}
+            onPause={handlePause}
+            isPaused={isPaused}
+          />
+
+          <div className="performance-info">
+            <h4>Technical Info</h4>
+            <ul>
+              <li>Engine: SDL2 + WebAssembly</li>
+              <li>Language: C++ → WASM</li>
+              <li>Frontend: React + TypeScript</li>
+              <li>Graphics: Hardware accelerated</li>
+            </ul>
+          </div>
+        </aside>
+      </main>
+
+      <footer className="App-footer">
+        <p>
+          Built with SDL2, WebAssembly, and React. 
+          <a href="https://github.com/your-repo" target="_blank" rel="noopener noreferrer">
+            View Source Code
+          </a>
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
+```
+
+### Styling
+
+```css
+/* src/App.css */
+.App {
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.App-header {
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.App-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  font-size: 1.1em;
+}
+
+.game-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+  padding: 30px;
+  flex-wrap: wrap;
+}
+
+.game-area {
+  flex: 1;
+  max-width: 800px;
+}
+
+.controls-area {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.performance-info {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+}
+
+.performance-info h4 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.performance-info ul {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+.performance-info li {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.instructions-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  color: #333;
+  padding: 30px;
+  border-radius: 15px;
+  max-width: 500px;
+  text-align: left;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+  text-align: center;
+  color: #4CAF50;
+  margin-top: 0;
+}
+
+.modal-content ul {
+  margin: 20px 0;
+}
+
+.modal-content li {
+  margin: 10px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.modal-content li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.start-button {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(145deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.start-button:hover {
+  transform: translateY(-2px);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 10;
+}
+
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.game-over-modal {
+  background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+  color: white;
+  padding: 40px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.game-over-modal h2 {
+  margin-top: 0;
+  font-size: 2.5em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.game-over-modal button {
+  margin-top: 20px;
+  padding: 15px 30px;
+  background: white;
+  color: #ff6b6b;
+  border: none;
+  border-radius: 25px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.game-over-modal button:hover {
+  transform: scale(1.05);
+}
+
+.App-footer {
+  margin-top: 50px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.App-footer a {
+  color: #4CAF50;
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+.App-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1200px) {
+  .game-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .controls-area {
+    flex: 1;
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .App-header h1 {
+    font-size: 2em;
+  }
+  
+  .stats-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .game-container {
+    padding: 15px;
+  }
+}
+```
+
+## Advanced Features and Optimization
+
+### Asset Management System
+
+```typescript
+// src/assets/AssetLoader.ts
+export interface GameAsset {
+  id: string;
+  type: 'image' | 'audio' | 'font';
+  url: string;
+  loaded: boolean;
+  data?: any;
+}
+
+export class AssetLoader {
+  private assets: Map<string, GameAsset> = new Map();
+  private loadingPromises: Map<string, Promise<any>> = new Map();
+
+  async loadAssets(assetList: Omit<GameAsset, 'loaded' | 'data'>[]): Promise<void> {
+    const loadPromises = assetList.map(asset => this.loadAsset(asset));
+    await Promise.all(loadPromises);
+  }
+
+  private async loadAsset(asset: Omit<GameAsset, 'loaded' | 'data'>): Promise<void> {
+    if (this.loadingPromises.has(asset.id)) {
+      return this.loadingPromises.get(asset.id)!;
+    }
+
+    const loadPromise = this.performLoad(asset);
+    this.loadingPromises.set(asset.id, loadPromise);
+
+    try {
+      const data = await loadPromise;
+      this.assets.set(asset.id, {
+        ...asset,
+        loaded: true,
+        data
+      });
+    } catch (error) {
+      console.error(`Failed to load asset ${asset.id}:`, error);
+      this.assets.set(asset.id, {
+        ...asset,
+        loaded: false,
+        data: null
+      });
+    }
+  }
+
+  private async performLoad(asset: Omit<GameAsset, 'loaded' | 'data'>): Promise<any> {
+    switch (asset.type) {
+      case 'image':
+        return this.loadImage(asset.url);
+      case 'audio':
+        return this.loadAudio(asset.url);
+      case 'font':
+        return this.loadFont(asset.url);
+      default:
+        throw new Error(`Unknown asset type: ${asset.type}`);
+    }
+  }
+
+  private loadImage(url: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  private loadAudio(url: string): Promise<HTMLAudioElement> {
+    return new Promise((resolve, reject) => {
+      const audio = new Audio();
+      audio.oncanplaythrough = () => resolve(audio);
+      audio.onerror = reject;
+      audio.src = url;
+    });
+  }
+
+  private loadFont(url: string): Promise<FontFace> {
+    return new Promise((resolve, reject) => {
+      const font = new FontFace('GameFont', `url(${url})`);
+      font.load().then(resolve).catch(reject);
+    });
+  }
+
+  getAsset(id: string): GameAsset | null {
+    return this.assets.get(id) || null;
+  }
+
+  isLoaded(id: string): boolean {
+    const asset = this.assets.get(id);
+    return asset ? asset.loaded : false;
+  }
+
+  getLoadProgress(): { loaded: number; total: number; percentage: number } {
+    const total = this.assets.size;
+    const loaded = Array.from(this.assets.values()).filter(a => a.loaded).length;
+    return {
+      loaded,
+      total,
+      percentage: total > 0 ? (loaded / total) * 100 : 100
+    };
+  }
+}
+```
+
+### Performance Monitoring
+
+```typescript
+// src/game/PerformanceMonitor.ts
+export interface PerformanceMetrics {
+  fps: number;
+  frameTime: number;
+  memoryUsage: number;
+  renderTime: number;
+  updateTime: number;
+}
+
+export class PerformanceMonitor {
+  private fpsCounter = 0;
+  private lastFpsTime = 0;
+  private frameTimeHistory: number[] = [];
+  private currentFps = 0;
+
+  private renderTimeStart = 0;
+  private updateTimeStart = 0;
+  private renderTime = 0;
+  private updateTime = 0;
+
+  update(): void {
+    const currentTime = performance.now();
+    this.fpsCounter++;
+
+    if (currentTime - this.lastFpsTime >= 1000) {
+      this.currentFps = this.fpsCounter;
+      this.fpsCounter = 0;
+      this.lastFpsTime = currentTime;
+    }
+
+    // Track frame time
+    if (this.frameTimeHistory.length > 0) {
+      const frameTime = currentTime - this.frameTimeHistory[this.frameTimeHistory.length - 1];
+      this.frameTimeHistory.push(currentTime);
+      
+      if (this.frameTimeHistory.length > 60) {
+        this.frameTimeHistory.shift();
+      }
+    } else {
+      this.frameTimeHistory.push(currentTime);
+    }
+  }
+
+  startRenderTiming(): void {
+    this.renderTimeStart = performance.now();
+  }
+
+  endRenderTiming(): void {
+    this.renderTime = performance.now() - this.renderTimeStart;
+  }
+
+  startUpdateTiming(): void {
+    this.updateTimeStart = performance.now();
+  }
+
+  endUpdateTiming(): void {
+    this.updateTime = performance.now() - this.updateTimeStart;
+  }
+
+  getMetrics(): PerformanceMetrics {
+    const frameTime = this.frameTimeHistory.length > 1 
+      ? this.frameTimeHistory[this.frameTimeHistory.length - 1] - 
+        this.frameTimeHistory[this.frameTimeHistory.length - 2]
+      : 0;
+
+    return {
+      fps: this.currentFps,
+      frameTime,
+      memoryUsage: (performance as any).memory?.usedJSHeapSize || 0,
+      renderTime: this.renderTime,
+      updateTime: this.updateTime
+    };
+  }
+}
+```
+
+### Production Build Script
+
+```json
+// package.json scripts
+{
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "npm run build-wasm && react-scripts build",
+    "build-wasm": "bash build-wasm.sh",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "serve": "npm run build && serve -s build",
+    "analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'"
+  }
+}
+```
+
+This comprehensive guide demonstrates how to integrate SDL with React for creating high-performance games and multimedia applications. The combination provides the best of both worlds: SDL's powerful graphics and audio capabilities with React's modern component architecture and development tools.

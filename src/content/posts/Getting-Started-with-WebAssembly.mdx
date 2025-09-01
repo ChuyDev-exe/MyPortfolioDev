@@ -1,0 +1,644 @@
+---
+title: "Getting Started with WebAssembly: El Futuro del Web"
+date: 2024-05-18
+description: "Aprende WebAssembly desde cero: qué es, cómo funciona, y cómo crear tu primera aplicación WASM con C++ y JavaScript."
+author: "Jesus Velez"
+tags: ["webassembly", "wasm", "javascript", "cpp", "performance"]
+---
+
+# Getting Started with WebAssembly: El Futuro del Web
+
+WebAssembly (WASM) está revolucionando el desarrollo web al permitir ejecutar código de alto rendimiento directamente en el navegador. En este tutorial aprenderás desde los conceptos básicos hasta crear tu primera aplicación.
+
+## ¿Qué es WebAssembly?
+
+WebAssembly es un formato de código binario que permite ejecutar código compilado en navegadores web con rendimiento casi nativo. Es:
+
+- **Rápido**: Ejecución casi tan rápida como código nativo
+- **Seguro**: Se ejecuta en un entorno sandboxed
+- **Portable**: Funciona en todos los navegadores modernos
+- **Compacto**: Archivos binarios optimizados
+
+## Configuración del Entorno
+
+### 1. Instalación de Emscripten
+
+```bash
+# Clonar Emscripten
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+
+# Instalar la última versión
+./emsdk install latest
+./emsdk activate latest
+
+# Configurar environment
+source ./emsdk_env.sh
+```
+
+### 2. Verificar Instalación
+
+```bash
+# Verificar emcc
+emcc --version
+
+# Verificar Node.js
+node --version
+```
+
+## Primer Programa en WebAssembly
+
+### 1. Código C++ Básico
+
+```cpp
+// math_utils.cpp
+#include <emscripten/emscripten.h>
+#include <cmath>
+
+extern "C" {
+    // Función para sumar dos números
+    EMSCRIPTEN_KEEPALIVE
+    int add(int a, int b) {
+        return a + b;
+    }
+    
+    // Función para calcular factorial
+    EMSCRIPTEN_KEEPALIVE
+    int factorial(int n) {
+        if (n <= 1) return 1;
+        return n * factorial(n - 1);
+    }
+    
+    // Función para calcular distancia entre puntos
+    EMSCRIPTEN_KEEPALIVE
+    double distance(double x1, double y1, double x2, double y2) {
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        return sqrt(dx * dx + dy * dy);
+    }
+    
+    // Función que trabaja con arrays
+    EMSCRIPTEN_KEEPALIVE
+    void process_array(int* arr, int length) {
+        for (int i = 0; i < length; i++) {
+            arr[i] = arr[i] * 2;
+        }
+    }
+}
+```
+
+### 2. Compilación a WebAssembly
+
+```bash
+# Compilación básica
+emcc math_utils.cpp -o math_utils.js -s EXPORTED_FUNCTIONS='["_add", "_factorial", "_distance", "_process_array"]' -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]'
+
+# Compilación optimizada
+emcc math_utils.cpp -o math_utils.js \
+  -O3 \
+  -s WASM=1 \
+  -s EXPORTED_FUNCTIONS='["_add", "_factorial", "_distance", "_process_array"]' \
+  -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' \
+  -s ALLOW_MEMORY_GROWTH=1 \
+  -s NO_EXIT_RUNTIME=1
+```
+
+## Integración con JavaScript
+
+### 1. HTML Básico
+
+```html
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAssembly Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .demo-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            padding: 5px;
+            margin: 5px;
+        }
+        #output {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebAssembly Demo</h1>
+    
+    <div class="demo-section">
+        <h2>Suma de Números</h2>
+        <input type="number" id="num1" placeholder="Número 1" value="5">
+        <input type="number" id="num2" placeholder="Número 2" value="3">
+        <button onclick="testAdd()">Sumar</button>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Factorial</h2>
+        <input type="number" id="factorialInput" placeholder="Número" value="5">
+        <button onclick="testFactorial()">Calcular Factorial</button>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Distancia entre Puntos</h2>
+        <input type="number" id="x1" placeholder="X1" value="0">
+        <input type="number" id="y1" placeholder="Y1" value="0">
+        <input type="number" id="x2" placeholder="X2" value="3">
+        <input type="number" id="y2" placeholder="Y2" value="4">
+        <button onclick="testDistance()">Calcular Distancia</button>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Procesamiento de Array</h2>
+        <input type="text" id="arrayInput" placeholder="Números separados por coma" value="1,2,3,4,5">
+        <button onclick="testArrayProcessing()">Duplicar Valores</button>
+    </div>
+    
+    <div id="output"></div>
+    
+    <script src="math_utils.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+```
+
+### 2. JavaScript para Interactuar con WASM
+
+```javascript
+// app.js
+let wasmModule;
+
+// Inicializar cuando el módulo WASM esté listo
+Module.onRuntimeInitialized = function() {
+    wasmModule = Module;
+    console.log('WebAssembly module loaded successfully!');
+    
+    // Crear wrappers para las funciones
+    window.wasmAdd = wasmModule.cwrap('add', 'number', ['number', 'number']);
+    window.wasmFactorial = wasmModule.cwrap('factorial', 'number', ['number']);
+    window.wasmDistance = wasmModule.cwrap('distance', 'number', ['number', 'number', 'number', 'number']);
+    
+    updateOutput('WebAssembly module loaded and ready!');
+};
+
+function updateOutput(message) {
+    const output = document.getElementById('output');
+    output.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${message}</p>`;
+    output.scrollTop = output.scrollHeight;
+}
+
+function testAdd() {
+    const num1 = parseInt(document.getElementById('num1').value);
+    const num2 = parseInt(document.getElementById('num2').value);
+    
+    if (!wasmModule) {
+        updateOutput('❌ WebAssembly module not loaded yet');
+        return;
+    }
+    
+    // Comparar rendimiento JS vs WASM
+    const startTime = performance.now();
+    const wasmResult = wasmAdd(num1, num2);
+    const wasmTime = performance.now() - startTime;
+    
+    const startTimeJS = performance.now();
+    const jsResult = num1 + num2;
+    const jsTime = performance.now() - startTimeJS;
+    
+    updateOutput(`➕ WASM: ${num1} + ${num2} = ${wasmResult} (${wasmTime.toFixed(4)}ms)`);
+    updateOutput(`➕ JS: ${num1} + ${num2} = ${jsResult} (${jsTime.toFixed(4)}ms)`);
+}
+
+function testFactorial() {
+    const num = parseInt(document.getElementById('factorialInput').value);
+    
+    if (!wasmModule) {
+        updateOutput('❌ WebAssembly module not loaded yet');
+        return;
+    }
+    
+    if (num < 0 || num > 20) {
+        updateOutput('❌ Please enter a number between 0 and 20');
+        return;
+    }
+    
+    const startTime = performance.now();
+    const result = wasmFactorial(num);
+    const wasmTime = performance.now() - startTime;
+    
+    updateOutput(`🔢 Factorial of ${num} = ${result} (${wasmTime.toFixed(4)}ms)`);
+}
+
+function testDistance() {
+    const x1 = parseFloat(document.getElementById('x1').value);
+    const y1 = parseFloat(document.getElementById('y1').value);
+    const x2 = parseFloat(document.getElementById('x2').value);
+    const y2 = parseFloat(document.getElementById('y2').value);
+    
+    if (!wasmModule) {
+        updateOutput('❌ WebAssembly module not loaded yet');
+        return;
+    }
+    
+    const result = wasmDistance(x1, y1, x2, y2);
+    updateOutput(`📏 Distance from (${x1},${y1}) to (${x2},${y2}) = ${result.toFixed(2)}`);
+}
+
+function testArrayProcessing() {
+    const input = document.getElementById('arrayInput').value;
+    const numbers = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+    
+    if (!wasmModule) {
+        updateOutput('❌ WebAssembly module not loaded yet');
+        return;
+    }
+    
+    if (numbers.length === 0) {
+        updateOutput('❌ Please enter valid numbers');
+        return;
+    }
+    
+    // Crear array en memoria WASM
+    const arrayPtr = wasmModule._malloc(numbers.length * 4); // 4 bytes per int
+    const arrayBuffer = new Int32Array(wasmModule.HEAP32.buffer, arrayPtr, numbers.length);
+    
+    // Copiar datos al array WASM
+    for (let i = 0; i < numbers.length; i++) {
+        arrayBuffer[i] = numbers[i];
+    }
+    
+    updateOutput(`📊 Original array: [${numbers.join(', ')}]`);
+    
+    // Procesar array con WASM
+    wasmModule.ccall('process_array', null, ['number', 'number'], [arrayPtr, numbers.length]);
+    
+    // Leer resultados
+    const processed = [];
+    for (let i = 0; i < numbers.length; i++) {
+        processed.push(arrayBuffer[i]);
+    }
+    
+    updateOutput(`📊 Processed array: [${processed.join(', ')}]`);
+    
+    // Liberar memoria
+    wasmModule._free(arrayPtr);
+}
+
+// Función de utilidad para benchmarking
+function benchmark(name, func, iterations = 1000000) {
+    const start = performance.now();
+    for (let i = 0; i < iterations; i++) {
+        func();
+    }
+    const end = performance.now();
+    updateOutput(`⏱️ ${name}: ${iterations} iterations in ${(end - start).toFixed(2)}ms`);
+}
+
+// Comparación de rendimiento automática
+function runPerformanceComparison() {
+    if (!wasmModule) {
+        updateOutput('❌ WebAssembly module not loaded yet');
+        return;
+    }
+    
+    updateOutput('🚀 Running performance comparison...');
+    
+    // Test factorial
+    benchmark('WASM Factorial(10)', () => wasmFactorial(10));
+    benchmark('JS Factorial(10)', () => {
+        let result = 1;
+        for (let i = 2; i <= 10; i++) {
+            result *= i;
+        }
+        return result;
+    });
+    
+    // Test suma intensiva
+    benchmark('WASM Add', () => wasmAdd(123, 456));
+    benchmark('JS Add', () => 123 + 456);
+}
+
+// Ejecutar comparación automáticamente después de cargar
+setTimeout(() => {
+    if (wasmModule) {
+        runPerformanceComparison();
+    }
+}, 2000);
+```
+
+## Ejemplo Avanzado: Procesamiento de Imágenes
+
+### 1. Código C++ para Filtros
+
+```cpp
+// image_processing.cpp
+#include <emscripten/emscripten.h>
+#include <cmath>
+#include <algorithm>
+
+extern "C" {
+    // Aplicar filtro de escala de grises
+    EMSCRIPTEN_KEEPALIVE
+    void grayscale(unsigned char* imageData, int width, int height) {
+        for (int i = 0; i < width * height * 4; i += 4) {
+            // Fórmula estándar para escala de grises
+            unsigned char gray = (unsigned char)(
+                0.299 * imageData[i] +     // R
+                0.587 * imageData[i + 1] + // G
+                0.114 * imageData[i + 2]   // B
+            );
+            
+            imageData[i] = gray;     // R
+            imageData[i + 1] = gray; // G
+            imageData[i + 2] = gray; // B
+            // Alpha (i + 3) permanece igual
+        }
+    }
+    
+    // Aplicar filtro sepia
+    EMSCRIPTEN_KEEPALIVE
+    void sepia(unsigned char* imageData, int width, int height) {
+        for (int i = 0; i < width * height * 4; i += 4) {
+            unsigned char r = imageData[i];
+            unsigned char g = imageData[i + 1];
+            unsigned char b = imageData[i + 2];
+            
+            imageData[i] = std::min(255, (int)(0.393 * r + 0.769 * g + 0.189 * b));
+            imageData[i + 1] = std::min(255, (int)(0.349 * r + 0.686 * g + 0.168 * b));
+            imageData[i + 2] = std::min(255, (int)(0.272 * r + 0.534 * g + 0.131 * b));
+        }
+    }
+    
+    // Aplicar filtro de brillo
+    EMSCRIPTEN_KEEPALIVE
+    void brightness(unsigned char* imageData, int width, int height, int value) {
+        for (int i = 0; i < width * height * 4; i += 4) {
+            imageData[i] = std::max(0, std::min(255, (int)imageData[i] + value));
+            imageData[i + 1] = std::max(0, std::min(255, (int)imageData[i + 1] + value));
+            imageData[i + 2] = std::max(0, std::min(255, (int)imageData[i + 2] + value));
+        }
+    }
+}
+```
+
+### 2. Interfaz Web para Procesamiento de Imágenes
+
+```html
+<!-- image_demo.html -->
+<div class="image-demo">
+    <h2>Procesamiento de Imágenes con WebAssembly</h2>
+    
+    <input type="file" id="imageInput" accept="image/*">
+    <canvas id="canvas" style="max-width: 100%; border: 1px solid #ddd;"></canvas>
+    
+    <div class="controls">
+        <button onclick="applyGrayscale()">Escala de Grises</button>
+        <button onclick="applySepia()">Sepia</button>
+        <button onclick="applyBrightness(30)">Más Brillo</button>
+        <button onclick="applyBrightness(-30)">Menos Brillo</button>
+        <button onclick="resetImage()">Reset</button>
+    </div>
+</div>
+
+<script>
+let originalImageData = null;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function applyGrayscale() {
+    if (!originalImageData || !wasmModule) return;
+    
+    const imageData = new ImageData(
+        new Uint8ClampedArray(originalImageData.data),
+        originalImageData.width,
+        originalImageData.height
+    );
+    
+    // Copiar datos a memoria WASM
+    const dataPtr = wasmModule._malloc(imageData.data.length);
+    wasmModule.HEAPU8.set(imageData.data, dataPtr);
+    
+    // Aplicar filtro
+    wasmModule.ccall('grayscale', null, ['number', 'number', 'number'], 
+        [dataPtr, imageData.width, imageData.height]);
+    
+    // Copiar datos de vuelta
+    const processedData = wasmModule.HEAPU8.subarray(dataPtr, dataPtr + imageData.data.length);
+    imageData.data.set(processedData);
+    
+    ctx.putImageData(imageData, 0, 0);
+    
+    wasmModule._free(dataPtr);
+}
+
+function applySepia() {
+    // Similar a grayscale pero llamando sepia
+    if (!originalImageData || !wasmModule) return;
+    
+    const imageData = new ImageData(
+        new Uint8ClampedArray(originalImageData.data),
+        originalImageData.width,
+        originalImageData.height
+    );
+    
+    const dataPtr = wasmModule._malloc(imageData.data.length);
+    wasmModule.HEAPU8.set(imageData.data, dataPtr);
+    
+    wasmModule.ccall('sepia', null, ['number', 'number', 'number'], 
+        [dataPtr, imageData.width, imageData.height]);
+    
+    const processedData = wasmModule.HEAPU8.subarray(dataPtr, dataPtr + imageData.data.length);
+    imageData.data.set(processedData);
+    
+    ctx.putImageData(imageData, 0, 0);
+    wasmModule._free(dataPtr);
+}
+
+function applyBrightness(value) {
+    if (!originalImageData || !wasmModule) return;
+    
+    const imageData = new ImageData(
+        new Uint8ClampedArray(originalImageData.data),
+        originalImageData.width,
+        originalImageData.height
+    );
+    
+    const dataPtr = wasmModule._malloc(imageData.data.length);
+    wasmModule.HEAPU8.set(imageData.data, dataPtr);
+    
+    wasmModule.ccall('brightness', null, ['number', 'number', 'number', 'number'], 
+        [dataPtr, imageData.width, imageData.height, value]);
+    
+    const processedData = wasmModule.HEAPU8.subarray(dataPtr, dataPtr + imageData.data.length);
+    imageData.data.set(processedData);
+    
+    ctx.putImageData(imageData, 0, 0);
+    wasmModule._free(dataPtr);
+}
+
+function resetImage() {
+    if (originalImageData) {
+        ctx.putImageData(originalImageData, 0, 0);
+    }
+}
+</script>
+```
+
+## Optimizaciones y Mejores Prácticas
+
+### 1. Flags de Compilación Optimizadas
+
+```bash
+# Para desarrollo
+emcc source.cpp -o output.js -O0 -g -s ASSERTIONS=1
+
+# Para producción
+emcc source.cpp -o output.js -O3 -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 --closure 1
+```
+
+### 2. Manejo de Memoria Eficiente
+
+```javascript
+// Wrapper para manejo automático de memoria
+class WasmArray {
+    constructor(wasmModule, size, type = 'i32') {
+        this.module = wasmModule;
+        this.size = size;
+        this.type = type;
+        this.bytesPerElement = type === 'f64' ? 8 : 4;
+        this.ptr = this.module._malloc(size * this.bytesPerElement);
+        
+        // Crear vista tipada
+        const buffer = this.module.HEAP32.buffer;
+        if (type === 'f64') {
+            this.view = new Float64Array(buffer, this.ptr, size);
+        } else {
+            this.view = new Int32Array(buffer, this.ptr, size);
+        }
+    }
+    
+    free() {
+        if (this.ptr) {
+            this.module._free(this.ptr);
+            this.ptr = null;
+            this.view = null;
+        }
+    }
+    
+    get(index) {
+        return this.view[index];
+    }
+    
+    set(index, value) {
+        this.view[index] = value;
+    }
+    
+    getPointer() {
+        return this.ptr;
+    }
+}
+
+// Uso
+const arr = new WasmArray(wasmModule, 1000);
+// ... usar array
+arr.free(); // Liberar memoria
+```
+
+## Debugging WebAssembly
+
+### 1. Con Chrome DevTools
+
+```javascript
+// Habilitar debugging
+Module = {
+    onRuntimeInitialized: function() {
+        console.log('WASM loaded');
+    },
+    print: function(text) {
+        console.log('WASM:', text);
+    },
+    printErr: function(text) {
+        console.error('WASM Error:', text);
+    }
+};
+```
+
+### 2. Profiling de Rendimiento
+
+```javascript
+function profileWasmFunction(funcName, func, iterations = 1000) {
+    console.time(funcName);
+    for (let i = 0; i < iterations; i++) {
+        func();
+    }
+    console.timeEnd(funcName);
+}
+
+// Ejemplo
+profileWasmFunction('WASM Factorial', () => wasmFactorial(15));
+```
+
+## Conclusión
+
+WebAssembly abre nuevas posibilidades para el desarrollo web:
+
+- ✅ **Rendimiento**: Cerca del nativo para cálculos intensivos
+- ✅ **Portabilidad**: Código C/C++/Rust ejecutándose en el browser
+- ✅ **Seguridad**: Entorno sandboxed seguro
+- ✅ **Interoperabilidad**: Fácil integración con JavaScript
+
+## Próximos Pasos
+
+1. Experimentar con Rust y WebAssembly
+2. Integrar WASM en frameworks como React/Vue
+3. Explorar WebAssembly System Interface (WASI)
+4. Usar threading con SharedArrayBuffer
+
+¿Qué te gustaría construir con WebAssembly? ¡Comparte tus ideas en los comentarios!

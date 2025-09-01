@@ -1,0 +1,324 @@
+---
+title: "LVGL Migration 8.4 to 9.3: Embedded GUI Evolution"
+date: 2024-06-10
+description: "Guía completa para migrar proyectos de LVGL 8.4 a 9.3. Aprende los cambios principales, nuevas características y cómo actualizar tu código embedded."
+author: "Jesus Velez"
+tags: ["lvgl", "embedded", "gui", "migration", "esp32", "stm32"]
+---
+
+# LVGL Migration 8.4 to 9.3: Embedded GUI Evolution
+
+LVGL (Light and Versatile Graphics Library) es una de las librerías GUI más populares para sistemas embebidos. La migración de la versión 8.4 a 9.3 trae cambios significativos y mejoras importantes. Esta guía te ayudará a migrar exitosamente.
+
+## Cambios Principales en LVGL 9.3
+
+### 1. Arquitectura de Display Refactorizada
+
+**LVGL 8.4:**
+```c
+// Configuración antigua
+static lv_disp_draw_buf_t draw_buf;
+static lv_color_t buf_1[MY_DISP_HOR_RES * 10];
+
+lv_disp_draw_buf_init(&draw_buf, buf_1, NULL, MY_DISP_HOR_RES * 10);
+
+static lv_disp_drv_t disp_drv;
+lv_disp_drv_init(&disp_drv);
+disp_drv.hor_res = MY_DISP_HOR_RES;
+disp_drv.ver_res = MY_DISP_VER_RES;
+disp_drv.flush_cb = my_disp_flush;
+disp_drv.draw_buf = &draw_buf;
+lv_disp_drv_register(&disp_drv);
+```
+
+**LVGL 9.3:**
+```c
+// Nueva arquitectura
+static lv_display_t * disp;
+
+void display_init(void) {
+    disp = lv_display_create(MY_DISP_HOR_RES, MY_DISP_VER_RES);
+    
+    // Configurar buffer
+    static lv_color_t buf_1[MY_DISP_HOR_RES * 10];
+    lv_display_set_buffers(disp, buf_1, NULL, sizeof(buf_1), LV_DISPLAY_RENDER_MODE_PARTIAL);
+    
+    // Configurar callback de flush
+    lv_display_set_flush_cb(disp, my_disp_flush);
+    
+    // Configuraciones adicionales
+    lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_0);
+    lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565);
+}
+```
+
+### 2. Sistema de Input Simplificado
+
+**LVGL 8.4:**
+```c
+// Input device antiguo
+static lv_indev_drv_t indev_drv;
+lv_indev_drv_init(&indev_drv);
+indev_drv.type = LV_INDEV_TYPE_POINTER;
+indev_drv.read_cb = my_touchpad_read;
+lv_indev_drv_register(&indev_drv);
+```
+
+**LVGL 9.3:**
+```c
+// Nuevo sistema de input
+lv_indev_t * indev = lv_indev_create();
+lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+lv_indev_set_read_cb(indev, my_touchpad_read);
+
+// Para displays específicos
+lv_indev_set_display(indev, disp);
+```
+
+## Migración de Drivers
+
+### Driver de Display ESP32 Actualizado
+
+```c
+#include "lvgl.h"
+#include "driver/spi_master.h"
+
+static lv_display_t * disp;
+static spi_device_handle_t spi;
+
+// Callback actualizado para LVGL 9.3
+static void my_disp_flush(lv_display_t * display, const lv_area_t * area, uint8_t * px_map) {
+    uint32_t w = (area->x2 - area->x1 + 1);
+    uint32_t h = (area->y2 - area->y1 + 1);
+    
+    // Enviar datos al display via SPI
+    send_display_data(area, px_map, w * h * 2);
+    
+    // Notificar a LVGL que el flush terminó
+    lv_display_flush_ready(display);
+}
+
+void display_init(void) {
+    // Inicializar SPI
+    init_spi_display();
+    
+    // Crear display
+    disp = lv_display_create(240, 320);
+    
+    // Configurar buffers
+    static lv_color_t buf_1[240 * 40];
+    static lv_color_t buf_2[240 * 40];
+    lv_display_set_buffers(disp, buf_1, buf_2, sizeof(buf_1), LV_DISPLAY_RENDER_MODE_PARTIAL);
+    
+    // Configurar callbacks
+    lv_display_set_flush_cb(disp, my_disp_flush);
+    lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565);
+}
+```
+
+### Driver de Touch Actualizado
+
+```c
+// Touch driver para LVGL 9.3
+static void my_touchpad_read(lv_indev_t * indev, lv_indev_data_t * data) {
+    static int16_t last_x = 0;
+    static int16_t last_y = 0;
+    
+    if (touch_is_pressed()) {
+        data->state = LV_INDEV_STATE_PRESSED;
+        data->point.x = get_touch_x();
+        data->point.y = get_touch_y();
+        
+        last_x = data->point.x;
+        last_y = data->point.y;
+    } else {
+        data->state = LV_INDEV_STATE_RELEASED;
+        data->point.x = last_x;
+        data->point.y = last_y;
+    }
+}
+
+void input_init(void) {
+    // Inicializar hardware de touch
+    init_touch_hardware();
+    
+    // Crear input device
+    lv_indev_t * indev = lv_indev_create();
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(indev, my_touchpad_read);
+    
+    // Asociar con display
+    lv_indev_set_display(indev, disp);
+}
+```
+
+## Nuevas Características
+
+### Vector Graphics Support
+
+```c
+// Crear gráficos vectoriales
+void create_vector_graphics(void) {
+    lv_obj_t * canvas = lv_canvas_create(lv_screen_active());
+    lv_canvas_set_buffer(canvas, canvas_buf, 200, 200, LV_COLOR_FORMAT_RGB565);
+    
+    // Crear path vector
+    lv_vector_path_t * path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
+    
+    // Dibujar formas
+    lv_vector_path_move_to(path, 50, 50);
+    lv_vector_path_line_to(path, 150, 50);
+    lv_vector_path_line_to(path, 100, 150);
+    lv_vector_path_close(path);
+    
+    // Aplicar al canvas
+    lv_vector_dsc_t vector_dsc;
+    lv_vector_dsc_init(&vector_dsc);
+    vector_dsc.fill_dsc.color = lv_color_hex(0x00FF00);
+    
+    lv_canvas_draw_vector(canvas, path, &vector_dsc);
+    lv_vector_path_delete(path);
+}
+```
+
+### Tema Mejorado
+
+```c
+// Aplicar tema moderno
+void apply_modern_theme(void) {
+    lv_theme_t * theme = lv_theme_default_init(
+        disp,
+        lv_palette_main(LV_PALETTE_BLUE),
+        lv_palette_main(LV_PALETTE_RED),
+        true,  // Modo oscuro
+        LV_FONT_DEFAULT
+    );
+    
+    lv_display_set_theme(disp, theme);
+}
+```
+
+## Migración de UI
+
+### Antes (LVGL 8.4)
+
+```c
+void create_ui_old(void) {
+    lv_obj_t * screen = lv_scr_act();
+    
+    lv_obj_t * label = lv_label_create(screen);
+    lv_label_set_text(label, "Hello LVGL 8.4!");
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+}
+```
+
+### Después (LVGL 9.3)
+
+```c
+void create_ui_new(void) {
+    lv_obj_t * screen = lv_screen_active();
+    
+    // Aplicar tema
+    apply_modern_theme();
+    
+    // Crear card con sombra
+    lv_obj_t * card = lv_obj_create(screen);
+    lv_obj_set_size(card, 200, 100);
+    lv_obj_center(card);
+    lv_obj_set_style_shadow_width(card, 15, 0);
+    lv_obj_set_style_shadow_opa(card, LV_OPA_30, 0);
+    
+    lv_obj_t * label = lv_label_create(card);
+    lv_label_set_text(label, "Hello LVGL 9.3!");
+    lv_obj_set_style_text_font(label, &lv_font_montserrat_16, 0);
+    lv_obj_center(label);
+    
+    // Animación de entrada
+    lv_anim_t anim;
+    lv_anim_init(&anim);
+    lv_anim_set_var(&anim, card);
+    lv_anim_set_values(&anim, -100, 0);
+    lv_anim_set_time(&anim, 500);
+    lv_anim_set_exec_cb(&anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
+    lv_anim_start(&anim);
+}
+```
+
+## Optimizaciones
+
+### Configuración de Memoria
+
+```c
+// lv_conf.h optimizado
+#define LV_MEM_SIZE             (48 * 1024U)
+#define LV_USE_IMG_CACHE        1
+#define LV_IMG_CACHE_DEF_SIZE   1
+#define LV_USE_DRAW_MASKS       1
+```
+
+### Performance Monitoring
+
+```c
+void enable_performance_monitoring(void) {
+    lv_obj_t * perf_label = lv_label_create(lv_screen_active());
+    lv_obj_align(perf_label, LV_ALIGN_TOP_LEFT, 10, 10);
+    
+    lv_timer_create(update_performance_stats, 1000, perf_label);
+}
+
+static void update_performance_stats(lv_timer_t * timer) {
+    lv_obj_t * label = (lv_obj_t*)timer->user_data;
+    
+    lv_mem_monitor_t mem_mon;
+    lv_mem_monitor(&mem_mon);
+    
+    lv_label_set_text_fmt(label, "MEM: %lu/%lu KB", 
+        (mem_mon.total_size - mem_mon.free_size) / 1024, 
+        mem_mon.total_size / 1024);
+}
+```
+
+## Troubleshooting
+
+### Display no inicializa
+
+```c
+void debug_display_init(void) {
+    ESP_LOGI("LVGL", "Creating display...");
+    disp = lv_display_create(240, 320);
+    
+    if (!disp) {
+        ESP_LOGE("LVGL", "Failed to create display");
+        return;
+    }
+    
+    ESP_LOGI("LVGL", "Display created successfully");
+    
+    // Verificar buffer allocation
+    static lv_color_t buf_1[240 * 40];
+    lv_display_set_buffers(disp, buf_1, NULL, sizeof(buf_1), LV_DISPLAY_RENDER_MODE_PARTIAL);
+    
+    ESP_LOGI("LVGL", "Buffers configured");
+}
+```
+
+## Checklist de Migración
+
+- [ ] Actualizar `lv_conf.h` con nuevas opciones
+- [ ] Migrar inicialización de display a `lv_display_create()`
+- [ ] Actualizar callbacks de flush y input
+- [ ] Convertir `lv_scr_act()` a `lv_screen_active()`
+- [ ] Probar todas las funcionalidades
+- [ ] Optimizar configuración de memoria
+- [ ] Implementar nuevas características (vector graphics, etc.)
+
+## Conclusión
+
+LVGL 9.3 ofrece:
+
+- ✅ **API más simple** y consistente
+- ✅ **Mejor rendimiento** y optimizaciones
+- ✅ **Nuevas características** como vector graphics
+- ✅ **Mejor soporte** para displays múltiples
+
+La migración requiere actualizar el código de inicialización, pero las mejoras valen la pena para proyectos embebidos modernos.

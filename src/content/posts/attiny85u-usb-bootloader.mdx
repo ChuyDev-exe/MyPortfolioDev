@@ -1,0 +1,633 @@
+---
+title: "ATtiny85 USB Bootloader: Microcontroller Programming"
+date: 2024-04-28
+description: "Guía completa para configurar un bootloader USB en ATtiny85. Aprende a programar microcontroladores sin programador externo usando Micronucleus."
+author: "Jesus Velez"
+tags: ["attiny85", "bootloader", "usb", "microcontroller", "embedded", "arduino"]
+---
+
+# ATtiny85 USB Bootloader: Microcontroller Programming
+
+El ATtiny85 es un microcontrolador compacto y poderoso de Atmel. Con un bootloader USB, podemos programarlo directamente desde el puerto USB sin necesidad de un programador externo. Esta guía te mostrará cómo configurar Micronucleus bootloader.
+
+## ¿Qué es un Bootloader USB?
+
+Un bootloader es un pequeño programa que se ejecuta al inicio del microcontrolador y permite cargar nuevo firmware. En el caso del ATtiny85:
+
+- 🔌 **Programación USB**: Sin necesidad de programador ISP
+- ⚡ **Rápido y fácil**: Drag & drop programming
+- 💰 **Económico**: Reduce costos de hardware
+- 🔄 **Actualizaciones**: Firmware updates en campo
+
+## Hardware Requerido
+
+### Componentes Básicos
+
+```
+ATtiny85 Digispark Clone:
+- ATtiny85 microcontroller
+- USB connector (micro USB)
+- Regulador de voltaje 5V → 3.3V
+- Cristal de 16.5MHz (opcional)
+- LEDs de estado
+- Resistencias pull-up
+```
+
+### Esquema de Conexión
+
+```
+ATtiny85 Pinout (DIP-8):
+        ┌─────────────┐
+ RESET │1    U    8│ VCC
+   PB3 │2         7│ PB2 (SCK)
+   PB4 │3         6│ PB1 (MISO)
+   GND │4         5│ PB0 (MOSI)
+        └─────────────┘
+
+USB Connection:
+- PB3 (Pin 2) → USB D- (via 68Ω resistor)
+- PB4 (Pin 3) → USB D+ (via 68Ω resistor)
+- PB4 también conectado a VCC via 1.5kΩ resistor (pull-up)
+```
+
+## Instalación del Bootloader
+
+### 1. Configuración del Hardware
+
+```c
+// Configuración de fuses para ATtiny85
+// Low Fuse: 0xE1 (16MHz PLL clock)
+// High Fuse: 0xDD (permite bootloader)
+// Extended Fuse: 0xFE
+
+// Comando avrdude para configurar fuses:
+avrdude -c usbtiny -p attiny85 -U lfuse:w:0xe1:m -U hfuse:w:0xdd:m -U efuse:w:0xfe:m
+```
+
+### 2. Flash del Bootloader Micronucleus
+
+```bash
+# Descargar Micronucleus
+git clone https://github.com/micronucleus/micronucleus.git
+cd micronucleus
+
+# Compilar para ATtiny85
+cd firmware/configuration/t85_default
+make
+
+# Flash bootloader (requiere programador ISP)
+avrdude -c usbtiny -p attiny85 -U flash:w:main.hex:i
+```
+
+### 3. Verificación del Bootloader
+
+```bash
+# El bootloader debe aparecer como dispositivo USB
+lsusb
+# Debe mostrar: "ID 16d0:0753 MCS Digistump DigiSpark"
+
+# Test con micronucleus utility
+./micronucleus --run test.hex
+```
+
+## Programación con Arduino IDE
+
+### 1. Configuración del Arduino IDE
+
+```json
+// Agregar URL de board manager (Preferencias):
+http://digistump.com/package_digistump_index.json
+
+// Instalar "Digistump AVR Boards" desde Board Manager
+```
+
+### 2. Ejemplo: Blink LED
+
+```cpp
+// blink.ino - Parpadeo de LED en ATtiny85
+#define LED_PIN 1  // PB1 (Pin 6)
+
+void setup() {
+    pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+    digitalWrite(LED_PIN, HIGH);
+    delay(500);
+    digitalWrite(LED_PIN, LOW);
+    delay(500);
+}
+```
+
+### 3. Upload Process
+
+```
+1. Código → Verificar/Compilar
+2. Código → Subir
+3. Conectar ATtiny85 cuando aparezca el mensaje
+4. Esperar confirmación de upload exitoso
+```
+
+## Ejemplo Avanzado: Sensor de Temperatura USB
+
+### Hardware Setup
+
+```cpp
+// ATtiny85 Temperature Sensor with USB communication
+// PB1 → Status LED
+// PB2 → Temperature sensor (ADC)
+// PB3/PB4 → USB communication
+
+#include <DigiUSB.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// Pin definitions
+#define LED_PIN 1
+#define TEMP_SENSOR_PIN 2
+#define USB_POWER_PIN 0
+
+// Temperature sensor setup
+OneWire oneWire(TEMP_SENSOR_PIN);
+DallasTemperature tempSensor(&oneWire);
+
+// Variables
+float temperature = 0.0;
+unsigned long lastReading = 0;
+const unsigned long READING_INTERVAL = 2000; // 2 seconds
+
+void setup() {
+    // Initialize pins
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(USB_POWER_PIN, OUTPUT);
+    digitalWrite(USB_POWER_PIN, HIGH); // Enable USB power
+    
+    // Initialize USB communication
+    DigiUSB.begin();
+    
+    // Initialize temperature sensor
+    tempSensor.begin();
+    
+    // Startup indication
+    for (int i = 0; i < 3; i++) {
+        digitalWrite(LED_PIN, HIGH);
+        delay(200);
+        digitalWrite(LED_PIN, LOW);
+        delay(200);
+    }
+}
+
+void loop() {
+    // Handle USB communication
+    DigiUSB.refresh();
+    
+    // Read temperature periodically
+    if (millis() - lastReading >= READING_INTERVAL) {
+        readTemperature();
+        sendTemperatureData();
+        lastReading = millis();
+        
+        // Flash LED to indicate reading
+        digitalWrite(LED_PIN, HIGH);
+        delay(50);
+        digitalWrite(LED_PIN, LOW);
+    }
+    
+    // Handle USB commands
+    if (DigiUSB.available()) {
+        handleUSBCommand();
+    }
+    
+    delay(10); // Small delay to prevent overwhelming USB
+}
+
+void readTemperature() {
+    tempSensor.requestTemperatures();
+    temperature = tempSensor.getTempCByIndex(0);
+    
+    // Validate reading
+    if (temperature == DEVICE_DISCONNECTED_C) {
+        temperature = -999.0; // Error value
+    }
+}
+
+void sendTemperatureData() {
+    // Send JSON-formatted data
+    DigiUSB.print("{\"temperature\":");
+    DigiUSB.print(temperature, 2);
+    DigiUSB.print(",\"timestamp\":");
+    DigiUSB.print(millis());
+    DigiUSB.println("}");
+}
+
+void handleUSBCommand() {
+    String command = DigiUSB.readString();
+    command.trim();
+    
+    if (command == "GET_TEMP") {
+        sendTemperatureData();
+    }
+    else if (command == "LED_ON") {
+        digitalWrite(LED_PIN, HIGH);
+        DigiUSB.println("LED ON");
+    }
+    else if (command == "LED_OFF") {
+        digitalWrite(LED_PIN, LOW);
+        DigiUSB.println("LED OFF");
+    }
+    else if (command == "STATUS") {
+        DigiUSB.print("ATtiny85 Temperature Sensor - Running: ");
+        DigiUSB.print(millis() / 1000);
+        DigiUSB.println(" seconds");
+    }
+    else {
+        DigiUSB.println("Unknown command");
+    }
+}
+```
+
+## Cliente Python para Comunicación USB
+
+```python
+#!/usr/bin/env python3
+# attiny85_client.py - Cliente USB para ATtiny85
+
+import serial
+import json
+import time
+import argparse
+from datetime import datetime
+
+class ATtiny85Client:
+    def __init__(self, port="/dev/cu.usbmodem*", baudrate=9600):
+        self.port = port
+        self.baudrate = baudrate
+        self.connection = None
+        
+    def connect(self):
+        """Conectar al ATtiny85"""
+        try:
+            self.connection = serial.Serial(self.port, self.baudrate, timeout=1)
+            time.sleep(2)  # Esperar inicialización
+            print(f"Conectado a ATtiny85 en {self.port}")
+            return True
+        except Exception as e:
+            print(f"Error conectando: {e}")
+            return False
+    
+    def disconnect(self):
+        """Desconectar del ATtiny85"""
+        if self.connection:
+            self.connection.close()
+            print("Desconectado")
+    
+    def send_command(self, command):
+        """Enviar comando al ATtiny85"""
+        if not self.connection:
+            print("No hay conexión")
+            return None
+            
+        try:
+            self.connection.write(f"{command}\n".encode())
+            time.sleep(0.1)
+            
+            response = ""
+            while self.connection.in_waiting:
+                response += self.connection.read().decode()
+                
+            return response.strip()
+        except Exception as e:
+            print(f"Error enviando comando: {e}")
+            return None
+    
+    def get_temperature(self):
+        """Obtener lectura de temperatura"""
+        response = self.send_command("GET_TEMP")
+        if response:
+            try:
+                data = json.loads(response)
+                return data.get("temperature", None)
+            except json.JSONDecodeError:
+                return None
+        return None
+    
+    def get_status(self):
+        """Obtener status del dispositivo"""
+        return self.send_command("STATUS")
+    
+    def control_led(self, state):
+        """Controlar LED (True=ON, False=OFF)"""
+        command = "LED_ON" if state else "LED_OFF"
+        return self.send_command(command)
+    
+    def monitor_temperature(self, interval=2, duration=60):
+        """Monitorear temperatura continuamente"""
+        print(f"Monitoreando temperatura por {duration} segundos...")
+        start_time = time.time()
+        
+        try:
+            while time.time() - start_time < duration:
+                temp = self.get_temperature()
+                if temp is not None:
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    print(f"[{timestamp}] Temperatura: {temp:.2f}°C")
+                else:
+                    print("Error leyendo temperatura")
+                
+                time.sleep(interval)
+        except KeyboardInterrupt:
+            print("\nMonitoreo detenido por usuario")
+
+def main():
+    parser = argparse.ArgumentParser(description="Cliente ATtiny85 USB")
+    parser.add_argument("--port", default="/dev/cu.usbmodem*", help="Puerto serie")
+    parser.add_argument("--command", choices=["temp", "status", "led_on", "led_off", "monitor"], 
+                       help="Comando a ejecutar")
+    parser.add_argument("--monitor-time", type=int, default=60, 
+                       help="Tiempo de monitoreo en segundos")
+    
+    args = parser.parse_args()
+    
+    # Crear cliente
+    client = ATtiny85Client(args.port)
+    
+    if not client.connect():
+        return
+    
+    try:
+        if args.command == "temp":
+            temp = client.get_temperature()
+            if temp is not None:
+                print(f"Temperatura: {temp:.2f}°C")
+            else:
+                print("Error leyendo temperatura")
+                
+        elif args.command == "status":
+            status = client.get_status()
+            print(f"Status: {status}")
+            
+        elif args.command == "led_on":
+            response = client.control_led(True)
+            print(f"LED encendido: {response}")
+            
+        elif args.command == "led_off":
+            response = client.control_led(False)
+            print(f"LED apagado: {response}")
+            
+        elif args.command == "monitor":
+            client.monitor_temperature(duration=args.monitor_time)
+            
+        else:
+            print("Comandos disponibles:")
+            print("  --command temp       - Leer temperatura")
+            print("  --command status     - Estado del dispositivo")
+            print("  --command led_on     - Encender LED")
+            print("  --command led_off    - Apagar LED")
+            print("  --command monitor    - Monitoreo continuo")
+            
+    finally:
+        client.disconnect()
+
+if __name__ == "__main__":
+    main()
+```
+
+## Herramientas de Desarrollo
+
+### Makefile para Compilación
+
+```makefile
+# Makefile para ATtiny85 projects
+MCU = attiny85
+F_CPU = 16500000UL
+CC = avr-gcc
+OBJCOPY = avr-objcopy
+AVRDUDE = avrdude
+
+# Compiler flags
+CFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -Wall -Wextra
+
+# Project files
+TARGET = main
+SOURCES = main.c
+OBJECTS = $(SOURCES:.c=.o)
+
+# Default target
+all: $(TARGET).hex
+
+# Compile
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Link
+$(TARGET).elf: $(OBJECTS)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $@
+
+# Create hex file
+$(TARGET).hex: $(TARGET).elf
+	$(OBJCOPY) -O ihex $< $@
+
+# Upload via bootloader
+upload: $(TARGET).hex
+	micronucleus --run $(TARGET).hex
+
+# Clean
+clean:
+	rm -f *.o *.elf *.hex
+
+# Flash bootloader (requires ISP programmer)
+flash-bootloader:
+	$(AVRDUDE) -c usbtiny -p $(MCU) -U flash:w:bootloader.hex:i
+
+# Set fuses
+fuses:
+	$(AVRDUDE) -c usbtiny -p $(MCU) -U lfuse:w:0xe1:m -U hfuse:w:0xdd:m -U efuse:w:0xfe:m
+
+.PHONY: all upload clean flash-bootloader fuses
+```
+
+### Script de Test Automatizado
+
+```bash
+#!/bin/bash
+# test_attiny85.sh - Script de test para ATtiny85
+
+echo "=== ATtiny85 USB Bootloader Test ==="
+
+# Verificar si el dispositivo está conectado
+if lsusb | grep -q "16d0:0753"; then
+    echo "✅ ATtiny85 detectado"
+else
+    echo "❌ ATtiny85 no detectado"
+    echo "Conecta el dispositivo e intenta nuevamente"
+    exit 1
+fi
+
+# Compilar test program
+echo "🔨 Compilando test program..."
+make clean && make
+
+if [ $? -eq 0 ]; then
+    echo "✅ Compilación exitosa"
+else
+    echo "❌ Error en compilación"
+    exit 1
+fi
+
+# Upload test program
+echo "📤 Subiendo test program..."
+make upload
+
+if [ $? -eq 0 ]; then
+    echo "✅ Upload exitoso"
+else
+    echo "❌ Error en upload"
+    exit 1
+fi
+
+# Wait for device to restart
+echo "⏳ Esperando reinicio del dispositivo..."
+sleep 3
+
+# Test USB communication
+echo "🔄 Probando comunicación USB..."
+python3 attiny85_client.py --command status
+
+if [ $? -eq 0 ]; then
+    echo "✅ Comunicación USB exitosa"
+else
+    echo "❌ Error en comunicación USB"
+    exit 1
+fi
+
+echo "🎉 Todos los tests pasaron correctamente!"
+```
+
+## Troubleshooting Common Issues
+
+### 1. Bootloader no se detecta
+
+```bash
+# Verificar fuses
+avrdude -c usbtiny -p attiny85 -U lfuse:r:-:h -U hfuse:r:-:h -U efuse:r:-:h
+
+# Re-flash bootloader si es necesario
+avrdude -c usbtiny -p attiny85 -U flash:w:micronucleus.hex:i
+```
+
+### 2. Upload timeouts
+
+```bash
+# Usar timeout más largo
+micronucleus --run --timeout 60 firmware.hex
+
+# Verificar drivers USB
+# En Windows: instalar libusb drivers
+# En macOS: puede requerir desactivar System Integrity Protection temporalmente
+```
+
+### 3. Debugging USB Issues
+
+```c
+// Debug USB communication
+void debug_usb() {
+    DigiUSB.println("USB Debug Mode");
+    DigiUSB.print("Free RAM: ");
+    DigiUSB.println(freeRam());
+    
+    DigiUSB.print("Uptime: ");
+    DigiUSB.println(millis());
+}
+
+int freeRam() {
+    extern int __heap_start, *__brkval;
+    int v;
+    return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
+```
+
+## Optimización y Mejores Prácticas
+
+### 1. Memory Management
+
+```c
+// Optimizar uso de memoria en ATtiny85 (8KB flash, 512B RAM)
+#include <avr/pgmspace.h>
+
+// Strings en PROGMEM
+const char status_msg[] PROGMEM = "ATtiny85 Ready";
+
+void print_status() {
+    char buffer[32];
+    strcpy_P(buffer, status_msg);
+    DigiUSB.println(buffer);
+}
+```
+
+### 2. Power Management
+
+```c
+#include <avr/sleep.h>
+#include <avr/power.h>
+
+void enter_sleep_mode() {
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    power_all_disable();  // Disable all peripherals
+    sleep_enable();
+    sleep_cpu();
+    
+    // Wake up here
+    sleep_disable();
+    power_all_enable();   // Re-enable peripherals
+}
+```
+
+### 3. Watchdog Timer
+
+```c
+#include <avr/wdt.h>
+
+void setup() {
+    // Enable watchdog timer (8 seconds)
+    wdt_enable(WDTO_8S);
+    
+    // Your setup code
+    DigiUSB.begin();
+}
+
+void loop() {
+    // Reset watchdog
+    wdt_reset();
+    
+    // Your main code
+    // ...
+}
+```
+
+## Conclusión
+
+El bootloader USB para ATtiny85 ofrece:
+
+- ✅ **Programación sin hardware adicional** mediante USB
+- ✅ **Desarrollo rápido** con Arduino IDE
+- ✅ **Comunicación bidireccional** con el host
+- ✅ **Ideal para prototipos** y proyectos embedded pequeños
+- ✅ **Costo efectivo** para producción de bajo volumen
+
+### Aplicaciones Comunes
+
+- **Sensores USB**: Temperatura, humedad, luz
+- **Actuadores simples**: LEDs, servos, relays
+- **Interfaces HID**: Keyboards, mice personalizados
+- **Data loggers**: Pequeños sistemas de monitoreo
+- **Wearables**: Dispositivos portátiles conectados
+
+### Próximos Pasos
+
+1. Implementar comunicación I2C/SPI
+2. Crear dispositivos HID personalizados
+3. Desarrollar bootloader personalizado
+4. Integrar con sistemas IoT
+5. Optimizar consumo de energía para aplicaciones battery-powered
+
+¡El ATtiny85 con bootloader USB es perfecto para proyectos embedded pequeños y eficientes!

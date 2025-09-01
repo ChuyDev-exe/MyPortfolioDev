@@ -1,0 +1,312 @@
+---
+title: "Zephyr on ESP32: RTOS Development Guide"
+date: 2024-07-22
+description: "Comprehensive guide to developing with Zephyr RTOS on ESP32. Learn setup, configuration, and building IoT applications with this powerful real-time operating system."
+author: "Jesus Velez"
+tags: ["zephyr", "esp32", "rtos", "iot", "embedded", "c"]
+---
+
+# Zephyr on ESP32: RTOS Development Guide
+
+Zephyr es un RTOS (Real-Time Operating System) de código abierto que está ganando popularidad en el desarrollo embedded. En esta guía aprenderás a configurar y desarrollar con Zephyr en ESP32.
+
+## ¿Por qué Zephyr RTOS?
+
+### Ventajas de Zephyr
+
+- 🚀 **Multi-arquitectura**: ARM, x86, RISC-V, Xtensa (ESP32)
+- 🔧 **Modular**: Solo incluye las características que necesitas
+- 🛡️ **Seguridad**: Built-in security features y memory protection
+- 🌐 **Networking**: Soporte completo para TCP/IP, Bluetooth, LoRaWAN
+- 📱 **IoT Ready**: Ideal para dispositivos conectados
+
+## Instalación y Setup
+
+```bash
+# macOS
+brew install cmake ninja gperf python3 ccache qemu dtc
+pip3 install --user -U west
+
+# Configuración del Workspace
+mkdir ~/zephyrproject
+cd ~/zephyrproject
+west init
+west update
+west zephyr-export
+```
+
+## Primer Proyecto: Hello World
+
+### Código Principal
+
+```c
+// src/main.c
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/printk.h>
+
+#define LED0_NODE DT_ALIAS(led0)
+static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
+
+int main(void)
+{
+    printk("Hello World! Running on %s\n", CONFIG_BOARD);
+    printk("Zephyr version: %s\n", KERNEL_VERSION_STRING);
+
+    if (!gpio_is_ready_dt(&led)) {
+        printk("Error: LED device not ready\n");
+        return -1;
+    }
+
+    gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
+
+    while (1) {
+        gpio_pin_toggle_dt(&led);
+        k_sleep(K_MSEC(1000));
+        printk("System uptime: %u ms\n", k_uptime_get_32());
+    }
+
+    return 0;
+}
+```
+
+### Configuración
+
+```cmake
+# CMakeLists.txt
+cmake_minimum_required(VERSION 3.20.0)
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(hello_world)
+target_sources(app PRIVATE src/main.c)
+```
+
+```ini
+# prj.conf
+CONFIG_GPIO=y
+CONFIG_PRINTK=y
+CONFIG_LOG=y
+CONFIG_THREAD_MONITOR=y
+CONFIG_HEAP_MEM_POOL_SIZE=8192
+```
+
+## Build y Flash
+
+```bash
+# Build para ESP32
+west build -b esp32_devkitc_wroom
+
+# Flash al dispositivo
+west flash
+
+# Monitor serial
+west espressif monitor
+```
+
+## Proyecto IoT Avanzado
+
+### WiFi Manager
+
+```c
+#include <zephyr/net/wifi_mgmt.h>
+#include <zephyr/net/dhcpv4.h>
+
+struct wifi_config {
+    char ssid[32];
+    char password[64];
+    uint8_t security;
+};
+
+static bool connected = false;
+K_SEM_DEFINE(wifi_connected, 0, 1);
+
+static void wifi_mgmt_event_handler(struct net_mgmt_event_callback *cb,
+                                   uint32_t mgmt_event, struct net_if *iface)
+{
+    switch (mgmt_event) {
+    case NET_EVENT_WIFI_CONNECT_RESULT:
+        printk("WiFi connected\n");
+        connected = true;
+        k_sem_give(&wifi_connected);
+        break;
+    
+    case NET_EVENT_WIFI_DISCONNECT_RESULT:
+        printk("WiFi disconnected\n");
+        connected = false;
+        break;
+    }
+}
+
+int wifi_connect(struct wifi_config *config)
+{
+    struct wifi_connect_req_params params = {0};
+    
+    params.ssid = config->ssid;
+    params.ssid_length = strlen(config->ssid);
+    params.psk = config->password;
+    params.psk_length = strlen(config->password);
+    params.security = config->security;
+
+    if (net_mgmt(NET_REQUEST_WIFI_CONNECT, net_if_get_default(),
+                 &params, sizeof(params))) {
+        return -1;
+    }
+
+    if (k_sem_take(&wifi_connected, K_SECONDS(30)) != 0) {
+        return -ETIMEDOUT;
+    }
+
+    net_dhcpv4_start(net_if_get_default());
+    return 0;
+}
+```
+
+### Sensor Thread
+
+```c
+#define SENSOR_THREAD_STACK_SIZE 2048
+K_THREAD_STACK_DEFINE(sensor_stack, SENSOR_THREAD_STACK_SIZE);
+static struct k_thread sensor_thread;
+
+struct temperature_data {
+    float celsius;
+    float fahrenheit;
+    uint32_t timestamp;
+};
+
+void sensor_thread_fn(void *p1, void *p2, void *p3)
+{
+    struct temperature_data temp_data;
+    
+    while (1) {
+        // Simular lectura de sensor
+        temp_data.celsius = 25.0f + (float)(sys_rand32_get() % 100) / 10.0f;
+        temp_data.fahrenheit = temp_data.celsius * 9.0f / 5.0f + 32.0f;
+        temp_data.timestamp = k_uptime_get_32();
+        
+        printk("Temperature: %.2f°C (%.2f°F)\n", 
+               temp_data.celsius, temp_data.fahrenheit);
+        
+        k_sleep(K_SECONDS(5));
+    }
+}
+
+int main(void)
+{
+    printk("IoT Sensor Application Starting\n");
+    
+    // Crear sensor thread
+    k_thread_create(&sensor_thread, sensor_stack,
+                    K_THREAD_STACK_SIZEOF(sensor_stack),
+                    sensor_thread_fn, NULL, NULL, NULL,
+                    7, 0, K_NO_WAIT);
+    k_thread_name_set(&sensor_thread, "sensor");
+    
+    // WiFi configuration
+    struct wifi_config wifi_cfg = {
+        .ssid = "YourWiFiSSID",
+        .password = "YourWiFiPassword",
+        .security = WIFI_SECURITY_TYPE_PSK,
+    };
+    
+    if (wifi_connect(&wifi_cfg) == 0) {
+        printk("WiFi connected successfully\n");
+    }
+    
+    while (1) {
+        printk("System uptime: %u seconds\n", k_uptime_get_32() / 1000);
+        k_sleep(K_SECONDS(30));
+    }
+    
+    return 0;
+}
+```
+
+### Configuración Completa
+
+```ini
+# prj.conf para proyecto IoT
+CONFIG_PRINTK=y
+CONFIG_LOG=y
+
+# Networking
+CONFIG_NETWORKING=y
+CONFIG_NET_SOCKETS=y
+CONFIG_NET_IPV4=y
+CONFIG_NET_DHCPV4=y
+
+# WiFi
+CONFIG_WIFI=y
+CONFIG_WIFI_ESP32=y
+CONFIG_NET_L2_WIFI_MGMT=y
+
+# Memory
+CONFIG_HEAP_MEM_POOL_SIZE=32768
+CONFIG_MAIN_STACK_SIZE=4096
+
+# Threading
+CONFIG_THREAD_MONITOR=y
+CONFIG_THREAD_NAME=y
+CONFIG_SENSOR=y
+CONFIG_GPIO=y
+```
+
+## Performance y Debugging
+
+### System Statistics
+
+```c
+void print_system_stats(void)
+{
+    size_t free_bytes = k_heap_free_get(&k_malloc_async);
+    printk("Free heap: %zu bytes\n", free_bytes);
+    
+    struct k_thread_runtime_stats stats;
+    k_thread_runtime_stats_get(k_current_get(), &stats);
+    printk("Thread cycles: %llu\n", stats.execution_cycles);
+}
+```
+
+### Debug Configuration
+
+```ini
+# Debug config adicional
+CONFIG_DEBUG=y
+CONFIG_ASSERT=y
+CONFIG_STACK_SENTINEL=y
+CONFIG_THREAD_STACK_INFO=y
+CONFIG_LOG_DEFAULT_LEVEL=3
+```
+
+## Power Management
+
+```c
+#include <zephyr/pm/pm.h>
+
+void enter_low_power_mode(void)
+{
+    // Configurar power management
+    pm_power_state_force(0, &(struct pm_state_info){PM_STATE_STANDBY, 0, 0});
+    k_sleep(K_SECONDS(10));
+}
+```
+
+## Conclusión
+
+Zephyr RTOS en ESP32 ofrece:
+
+- ✅ **Arquitectura robusta** para aplicaciones IoT
+- ✅ **Networking completo** con soporte WiFi nativo
+- ✅ **Memory protection** y características de seguridad
+- ✅ **Threading avanzado** con primitivas de sincronización
+- ✅ **Power management** integrado
+
+### Próximos Pasos
+
+1. Implementar MQTT para comunicación IoT
+2. Agregar más sensores (I2C, SPI)
+3. Implementar OTA (Over-The-Air) updates
+4. Optimizar consumo de energía
+5. Integrar con plataformas cloud (AWS IoT, Azure)
+
+¡Zephyr es perfecto para proyectos IoT profesionales que requieren confiabilidad, escalabilidad y portabilidad!

@@ -1,0 +1,363 @@
+---
+title: "Configuración de Subdominios en Astro con Netlify"
+date: 2024-07-22
+description: "Guía completa para configurar subdominios en proyectos Astro desplegados en Netlify, incluyendo configuración de _redirects y netlify.toml."
+author: "Jesus Velez"
+tags: ["astro", "netlify", "subdomain", "deployment", "web-development"]
+---
+
+# Configuración de Subdominios en Astro con Netlify
+
+¿Necesitas configurar subdominios para tu proyecto Astro? En esta guía te enseño paso a paso cómo configurar subdominios profesionales usando Netlify, perfecto para separar tu portfolio principal de tu blog.
+
+## ¿Por qué usar Subdominios?
+
+Los subdominios ofrecen varias ventajas:
+
+- **Separación lógica**: `blog.tudominio.com` vs `tudominio.com`
+- **SEO mejorado**: Cada subdominio puede tener su propia estrategia
+- **Organización**: Diferentes secciones para diferentes propósitos
+- **Escalabilidad**: Fácil de mantener y expandir
+
+## Configuración del Proyecto Astro
+
+### 1. Estructura del Proyecto
+
+```
+src/
+├── pages/
+│   ├── index.astro          # Página principal (portfolio)
+│   ├── DevBlog.astro        # Blog principal
+│   └── Blog/
+│       ├── Posts.astro      # Lista de posts
+│       └── [slug].astro     # Posts individuales
+├── middleware.ts            # Manejo de subdominios
+└── layouts/
+    ├── Layout.astro         # Layout principal
+    └── BlogLayout.astro     # Layout del blog
+```
+
+### 2. Configuración de astro.config.mjs
+
+```javascript
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
+import tailwind from '@astrojs/tailwindcss';
+import react from '@astrojs/react';
+
+export default defineConfig({
+  output: 'server',
+  adapter: netlify({
+    edgeMiddleware: false
+  }),
+  integrations: [
+    tailwind(),
+    react()
+  ],
+  site: 'https://jesusvelez.xyz',
+  server: {
+    port: 4321,
+    host: true
+  }
+});
+```
+
+### 3. Middleware para Subdominios
+
+```typescript
+// src/middleware.ts
+import type { MiddlewareHandler } from 'astro';
+
+export const onRequest: MiddlewareHandler = async (context, next) => {
+  const url = new URL(context.request.url);
+  const hostname = url.hostname;
+  
+  // Extraer subdominio
+  const subdomain = hostname.split('.')[0];
+  
+  // Guardar subdominio en locals para acceso en páginas
+  context.locals.subdomain = subdomain === 'blog' ? 'blog' : '';
+  
+  return next();
+};
+```
+
+## Configuración de Netlify
+
+### 1. Archivo netlify.toml
+
+```toml
+# netlify.toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Configuración para el dominio principal (portfolio)
+[[redirects]]
+  from = "https://jesusvelez.xyz/Blog/*"
+  to = "https://blog.jesusvelez.xyz/Blog/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://jesusvelez.xyz/DevBlog"
+  to = "https://blog.jesusvelez.xyz/DevBlog"
+  status = 301
+  force = true
+
+# Configuración para el subdominio blog
+[[redirects]]
+  from = "https://blog.jesusvelez.xyz/"
+  to = "https://blog.jesusvelez.xyz/DevBlog"
+  status = 200
+
+# Configuración específica del subdominio blog
+[[redirects]]
+  from = "https://blog.jesusvelez.xyz/Blog/*"
+  to = "/Blog/:splat"
+  status = 200
+  headers = { Host = "blog.jesusvelez.xyz" }
+
+[[redirects]]
+  from = "https://blog.jesusvelez.xyz/DevBlog"
+  to = "/DevBlog"
+  status = 200
+  headers = { Host = "blog.jesusvelez.xyz" }
+
+# Fallback para SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de seguridad
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+```
+
+### 2. Archivo _redirects
+
+```bash
+# public/_redirects
+
+# Subdominio blog - mapear rutas del blog
+https://blog.jesusvelez.xyz/Blog/*  /Blog/:splat  200!
+https://blog.jesusvelez.xyz/       /DevBlog      200!
+
+# Dominio principal - redirigir rutas del blog al subdominio
+https://jesusvelez.xyz/Blog/*  https://blog.jesusvelez.xyz/Blog/:splat  301!
+https://jesusvelez.xyz/DevBlog https://blog.jesusvelez.xyz/DevBlog       301!
+
+# Fallback para SPA y rutas dinámicas
+/*  /index.html  200
+```
+
+## Configuración DNS
+
+### 1. Registros DNS necesarios
+
+En tu proveedor de DNS (Cloudflare, GoDaddy, etc.):
+
+```dns
+# Registro A para dominio principal
+jesusvelez.xyz        A    75.2.60.5
+
+# Registro CNAME para subdominio blog
+blog.jesusvelez.xyz   CNAME    jesusvelez.netlify.app
+```
+
+### 2. Configuración en Netlify Dashboard
+
+1. Ve a **Site settings** > **Domain management**
+2. Agrega tu dominio personalizado: `jesusvelez.xyz`
+3. Agrega el subdominio: `blog.jesusvelez.xyz`
+4. Configura SSL automático
+
+## Implementación en el Código
+
+### 1. Página Principal Condicional
+
+```astro
+---
+// src/pages/index.astro
+export const prerender = false;
+
+const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
+---
+
+<Layout title="Jesus Velez Soto">
+  {subdomain === '' && (
+    <>
+      <!-- Contenido del portfolio principal -->
+      <nav class="flex gap-7 justify-center mt-12">
+        <NavItem title="Experience" href="#Experiencia" />
+        <NavItem title="Projects" href="#Projects"/>
+        <NavItem title="Blog" href="https://blog.jesusvelez.xyz" />
+      </nav>
+      
+      <!-- Resto del contenido del portfolio -->
+    </>
+  )}
+</Layout>
+```
+
+### 2. Páginas del Blog
+
+```astro
+---
+// src/pages/DevBlog.astro
+import BlogLayout from "../layouts/BlogLayout.astro";
+---
+
+<BlogLayout title="Blog Dev">
+  <nav class="flex gap-5 justify-center w-full my-10">
+    <NavItem title="Portfolio" href="https://jesusvelez.xyz" />
+    <NavItem title="All Posts" href="/Blog/Posts" />
+  </nav>
+  
+  <!-- Contenido del blog -->
+</BlogLayout>
+```
+
+## Testing y Debugging
+
+### 1. Testing Local
+
+```bash
+# Ejecutar en desarrollo
+npm run dev
+
+# Simular subdominios localmente
+# Agregar a /etc/hosts (macOS/Linux) o C:\Windows\System32\drivers\etc\hosts (Windows)
+127.0.0.1 blog.localhost
+127.0.0.1 localhost
+
+# Acceder a:
+# http://localhost:4321 (portfolio)
+# http://blog.localhost:4321 (blog)
+```
+
+### 2. Verificación de Redirecciones
+
+```bash
+# Verificar redirecciones con curl
+curl -I https://jesusvelez.xyz/Blog/post-01
+# Debería retornar 301 y redirigir a blog.jesusvelez.xyz
+
+curl -I https://blog.jesusvelez.xyz/Blog/post-01
+# Debería retornar 200
+```
+
+## Problemas Comunes y Soluciones
+
+### 1. Certificados SSL
+
+**Problema**: SSL no funciona en subdominio
+```bash
+# Solución: Regenerar certificados
+netlify sites:create
+netlify deploy --prod
+```
+
+### 2. Redirecciones Infinitas
+
+**Problema**: Loop de redirecciones
+```toml
+# Solución: Usar force = true y orden correcto
+[[redirects]]
+  from = "https://domain.com/path"
+  to = "https://subdomain.domain.com/path"
+  force = true
+  status = 301
+```
+
+### 3. Assets no cargan
+
+**Problema**: CSS/JS no cargan en subdominio
+```astro
+<!-- Usar rutas absolutas -->
+<link rel="stylesheet" href="/styles/global.css" />
+<script src="/scripts/main.js"></script>
+```
+
+## Mejores Prácticas
+
+### 1. SEO y Meta Tags
+
+```astro
+---
+// Diferentes meta tags por subdominio
+const isBlogs = Astro.locals.subdomain === 'blog';
+const baseUrl = isBlogs ? 'https://blog.jesusvelez.xyz' : 'https://jesusvelez.xyz';
+---
+
+<head>
+  <title>{isBlogs ? 'Blog - ' : ''}{title}</title>
+  <link rel="canonical" href={`${baseUrl}${Astro.url.pathname}`} />
+  <meta property="og:url" content={`${baseUrl}${Astro.url.pathname}`} />
+</head>
+```
+
+### 2. Analytics Separados
+
+```astro
+---
+const analyticsId = Astro.locals.subdomain === 'blog' 
+  ? 'GA_MEASUREMENT_ID_BLOG' 
+  : 'GA_MEASUREMENT_ID_MAIN';
+---
+
+<!-- Google Analytics -->
+<script async src={`https://www.googletagmanager.com/gtag/js?id=${analyticsId}`}></script>
+```
+
+## Despliegue
+
+### 1. Build y Deploy
+
+```bash
+# Build del proyecto
+npm run build
+
+# Deploy a Netlify
+netlify deploy --prod
+
+# O usando Git (recomendado)
+git add .
+git commit -m "feat: subdomain configuration"
+git push origin main
+```
+
+### 2. Verificación Post-Deploy
+
+Verifica que funcionen:
+- ✅ `https://jesusvelez.xyz` (portfolio)
+- ✅ `https://blog.jesusvelez.xyz` (blog)
+- ✅ Redirecciones automáticas
+- ✅ SSL en ambos dominios
+
+## Conclusión
+
+Con esta configuración tienes:
+
+- 🌐 **Subdominios funcionales**: Separación clara entre portfolio y blog
+- 🔒 **SSL automático**: Seguridad en ambos dominios  
+- ⚡ **Redirecciones inteligentes**: URLs limpias y SEO-friendly
+- 🚀 **Deploy automatizado**: CI/CD con Netlify
+
+## Recursos Adicionales
+
+- [Documentación de Netlify Redirects](https://docs.netlify.com/routing/redirects/)
+- [Astro Middleware Guide](https://docs.astro.build/en/guides/middleware/)
+- [DNS Configuration Best Practices](https://developers.cloudflare.com/dns/)
+
+¿Tienes problemas con la configuración? ¡Déjame un comentario y te ayudo a resolverlo!

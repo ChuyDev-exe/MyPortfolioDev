@@ -1,0 +1,1271 @@
+---
+title: Luckfox Pico Mini - Complete Linux Configuration Guide
+date: 2024-07-10
+description: Complete setup guide for Luckfox Pico Mini single-board computer with Linux configuration, GPIO programming, and camera integration for embedded projects.
+author: Jesus Velez
+tags: [Luckfox, Linux, Embedded, GPIO, Camera, SBC, RV1103]
+layout: ../../layouts/PostLayout.astro
+---
+
+# Luckfox Pico Mini - Complete Linux Configuration Guide
+
+The Luckfox Pico Mini is an ultra-compact single-board computer powered by the Rockchip RV1103 ARM Cortex-A7 processor. This comprehensive guide covers everything from initial setup to advanced embedded applications with Linux.
+
+## Hardware Overview
+
+### Luckfox Pico Mini Specifications
+
+- **SoC**: Rockchip RV1103 ARM Cortex-A7 @ 1.2GHz
+- **RAM**: 64MB DDR2
+- **Storage**: MicroSD card slot (up to 128GB)
+- **Camera**: MIPI CSI interface for camera modules
+- **GPIO**: 26 pins compatible with Raspberry Pi layout
+- **Connectivity**: USB 2.0, UART, I2C, SPI, PWM
+- **Power**: 5V via USB-C or GPIO pins
+- **Dimensions**: 21mm x 51mm (ultra-compact form factor)
+
+### Pin Layout and GPIO Mapping
+
+```
+     3V3  (1) (2)  5V
+   GPIO2  (3) (4)  5V
+   GPIO3  (5) (6)  GND
+   GPIO4  (7) (8)  GPIO14
+     GND  (9) (10) GPIO15
+  GPIO17 (11) (12) GPIO18
+  GPIO27 (13) (14) GND
+  GPIO22 (15) (16) GPIO23
+     3V3 (17) (18) GPIO24
+  GPIO10 (19) (20) GND
+   GPIO9 (21) (22) GPIO25
+  GPIO11 (23) (24) GPIO8
+     GND (25) (26) GPIO7
+```
+
+## System Preparation and Initial Setup
+
+### Creating the Linux Image
+
+First, download and prepare the official Luckfox Pico SDK:
+
+```bash
+# Download the SDK
+git clone https://github.com/LuckfoxTECH/luckfox-pico.git
+cd luckfox-pico
+
+# Install dependencies (Ubuntu/Debian)
+sudo apt update
+sudo apt install -y git ssh make gcc-aarch64-linux-gnu adb fastboot \
+    device-tree-compiler python3 python3-distutils python3-pyelftools \
+    android-sdk-libsparse-utils android-sdk-ext4-utils img2simg \
+    cpio rsync bc bison flex libssl-dev
+
+# For other distributions, adjust package names accordingly
+```
+
+### SDK Configuration
+
+```bash
+# Navigate to SDK directory
+cd luckfox-pico
+
+# Choose target board configuration
+./build.sh lunch
+
+# Select: 
+# 1. luckfox_pico_mini_a-ubuntu
+# or
+# 2. luckfox_pico_mini_b-ubuntu
+
+# Build the complete system
+./build.sh
+```
+
+### Flashing the System
+
+```bash
+# Prepare SD card (replace sdX with your card device)
+sudo fdisk /dev/sdX
+
+# Flash the built image
+sudo dd if=output/image/luckfox_pico_mini_ubuntu.img of=/dev/sdX bs=4M status=progress
+sudo sync
+
+# Or use the official flashing tool
+sudo ./tools/linux/upgrade_tool ul output/image/luckfox_pico_mini_ubuntu.img
+```
+
+## First Boot and System Configuration
+
+### Serial Console Access
+
+Connect via UART for initial configuration:
+
+```bash
+# Using minicom (adjust device as needed)
+sudo minicom -D /dev/ttyUSB0 -b 115200
+
+# Or using screen
+sudo screen /dev/ttyUSB0 115200
+
+# Default login credentials
+# Username: pico
+# Password: luckfox
+```
+
+### Network Configuration
+
+```bash
+# Configure WiFi (if available via USB adapter)
+sudo nmcli dev wifi list
+sudo nmcli dev wifi connect "YourSSID" password "YourPassword"
+
+# Configure static IP (wired connection)
+sudo nano /etc/netplan/01-netcfg.yaml
+```
+
+**Network configuration file:**
+```yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      dhcp4: no
+      addresses:
+        - 192.168.1.100/24
+      gateway4: 192.168.1.1
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+```
+
+Apply network changes:
+```bash
+sudo netplan apply
+sudo systemctl restart systemd-networkd
+```
+
+### System Updates
+
+```bash
+# Update package lists
+sudo apt update
+sudo apt upgrade -y
+
+# Install essential development tools
+sudo apt install -y build-essential cmake git vim htop \
+    python3-pip python3-dev python3-gpio python3-smbus \
+    i2c-tools spi-tools minicom screen
+```
+
+## GPIO Programming and Hardware Control
+
+### GPIO Access and Control
+
+Create a comprehensive GPIO control library:
+
+```python
+#!/usr/bin/env python3
+# luckfox_gpio.py - GPIO control library
+
+import os
+import time
+import threading
+from enum import Enum
+
+class GPIOMode(Enum):
+    INPUT = "in"
+    OUTPUT = "out"
+
+class GPIOEdge(Enum):
+    NONE = "none"
+    RISING = "rising"
+    FALLING = "falling"
+    BOTH = "both"
+
+class LuckfoxGPIO:
+    def __init__(self):
+        self.gpio_base = "/sys/class/gpio"
+        self.exported_pins = set()
+    
+    def export_pin(self, pin):
+        """Export GPIO pin for use"""
+        if pin in self.exported_pins:
+            return
+        
+        export_path = f"{self.gpio_base}/export"
+        try:
+            with open(export_path, 'w') as f:
+                f.write(str(pin))
+            self.exported_pins.add(pin)
+            time.sleep(0.1)  # Allow time for export
+        except Exception as e:
+            print(f"Error exporting pin {pin}: {e}")
+    
+    def unexport_pin(self, pin):
+        """Unexport GPIO pin"""
+        if pin not in self.exported_pins:
+            return
+        
+        unexport_path = f"{self.gpio_base}/unexport"
+        try:
+            with open(unexport_path, 'w') as f:
+                f.write(str(pin))
+            self.exported_pins.discard(pin)
+        except Exception as e:
+            print(f"Error unexporting pin {pin}: {e}")
+    
+    def set_mode(self, pin, mode):
+        """Set GPIO pin mode (input/output)"""
+        self.export_pin(pin)
+        direction_path = f"{self.gpio_base}/gpio{pin}/direction"
+        
+        try:
+            with open(direction_path, 'w') as f:
+                f.write(mode.value)
+        except Exception as e:
+            print(f"Error setting mode for pin {pin}: {e}")
+    
+    def digital_write(self, pin, value):
+        """Write digital value to GPIO pin"""
+        self.export_pin(pin)
+        value_path = f"{self.gpio_base}/gpio{pin}/value"
+        
+        try:
+            with open(value_path, 'w') as f:
+                f.write('1' if value else '0')
+        except Exception as e:
+            print(f"Error writing to pin {pin}: {e}")
+    
+    def digital_read(self, pin):
+        """Read digital value from GPIO pin"""
+        self.export_pin(pin)
+        value_path = f"{self.gpio_base}/gpio{pin}/value"
+        
+        try:
+            with open(value_path, 'r') as f:
+                return int(f.read().strip()) == 1
+        except Exception as e:
+            print(f"Error reading from pin {pin}: {e}")
+            return False
+    
+    def set_edge(self, pin, edge):
+        """Set interrupt edge detection"""
+        self.export_pin(pin)
+        edge_path = f"{self.gpio_base}/gpio{pin}/edge"
+        
+        try:
+            with open(edge_path, 'w') as f:
+                f.write(edge.value)
+        except Exception as e:
+            print(f"Error setting edge for pin {pin}: {e}")
+    
+    def cleanup(self):
+        """Clean up all exported pins"""
+        for pin in list(self.exported_pins):
+            self.unexport_pin(pin)
+
+# Example usage and test functions
+def led_blink_example():
+    """LED blinking example"""
+    gpio = LuckfoxGPIO()
+    led_pin = 18  # GPIO18
+    
+    try:
+        gpio.set_mode(led_pin, GPIOMode.OUTPUT)
+        
+        print("Blinking LED on GPIO18...")
+        for i in range(20):
+            gpio.digital_write(led_pin, True)
+            time.sleep(0.5)
+            gpio.digital_write(led_pin, False)
+            time.sleep(0.5)
+            print(f"Blink {i+1}/20")
+            
+    finally:
+        gpio.cleanup()
+
+def button_reading_example():
+    """Button reading example with debouncing"""
+    gpio = LuckfoxGPIO()
+    button_pin = 17  # GPIO17
+    led_pin = 18    # GPIO18
+    
+    try:
+        gpio.set_mode(button_pin, GPIOMode.INPUT)
+        gpio.set_mode(led_pin, GPIOMode.OUTPUT)
+        
+        print("Button reading example - Press button to toggle LED")
+        print("Press Ctrl+C to exit")
+        
+        last_button_state = False
+        led_state = False
+        
+        while True:
+            current_button_state = gpio.digital_read(button_pin)
+            
+            # Detect button press (rising edge with debouncing)
+            if current_button_state and not last_button_state:
+                time.sleep(0.05)  # Debounce delay
+                if gpio.digital_read(button_pin):  # Confirm button is still pressed
+                    led_state = not led_state
+                    gpio.digital_write(led_pin, led_state)
+                    print(f"Button pressed! LED {'ON' if led_state else 'OFF'}")
+            
+            last_button_state = current_button_state
+            time.sleep(0.01)  # Small delay to prevent excessive CPU usage
+            
+    except KeyboardInterrupt:
+        print("\nExiting...")
+    finally:
+        gpio.cleanup()
+
+if __name__ == "__main__":
+    print("Luckfox Pico Mini GPIO Examples")
+    print("1. LED Blink")
+    print("2. Button Reading")
+    
+    choice = input("Select example (1 or 2): ")
+    
+    if choice == "1":
+        led_blink_example()
+    elif choice == "2":
+        button_reading_example()
+    else:
+        print("Invalid choice")
+```
+
+### PWM Control for Servo Motors
+
+```python
+#!/usr/bin/env python3
+# luckfox_pwm.py - PWM control for servos and LED dimming
+
+import os
+import time
+import threading
+
+class LuckfoxPWM:
+    def __init__(self, pwm_chip=0, pwm_channel=0):
+        self.pwm_chip = pwm_chip
+        self.pwm_channel = pwm_channel
+        self.pwm_path = f"/sys/class/pwm/pwmchip{pwm_chip}/pwm{pwm_channel}"
+        self.chip_path = f"/sys/class/pwm/pwmchip{pwm_chip}"
+        self.exported = False
+        
+    def export(self):
+        """Export PWM channel"""
+        if self.exported:
+            return
+            
+        try:
+            with open(f"{self.chip_path}/export", 'w') as f:
+                f.write(str(self.pwm_channel))
+            self.exported = True
+            time.sleep(0.1)
+        except Exception as e:
+            print(f"Error exporting PWM: {e}")
+    
+    def unexport(self):
+        """Unexport PWM channel"""
+        if not self.exported:
+            return
+            
+        try:
+            self.disable()
+            with open(f"{self.chip_path}/unexport", 'w') as f:
+                f.write(str(self.pwm_channel))
+            self.exported = False
+        except Exception as e:
+            print(f"Error unexporting PWM: {e}")
+    
+    def set_period(self, period_ns):
+        """Set PWM period in nanoseconds"""
+        self.export()
+        try:
+            with open(f"{self.pwm_path}/period", 'w') as f:
+                f.write(str(period_ns))
+        except Exception as e:
+            print(f"Error setting period: {e}")
+    
+    def set_duty_cycle(self, duty_cycle_ns):
+        """Set PWM duty cycle in nanoseconds"""
+        self.export()
+        try:
+            with open(f"{self.pwm_path}/duty_cycle", 'w') as f:
+                f.write(str(duty_cycle_ns))
+        except Exception as e:
+            print(f"Error setting duty cycle: {e}")
+    
+    def enable(self):
+        """Enable PWM output"""
+        self.export()
+        try:
+            with open(f"{self.pwm_path}/enable", 'w') as f:
+                f.write("1")
+        except Exception as e:
+            print(f"Error enabling PWM: {e}")
+    
+    def disable(self):
+        """Disable PWM output"""
+        if not self.exported:
+            return
+        try:
+            with open(f"{self.pwm_path}/enable", 'w') as f:
+                f.write("0")
+        except Exception as e:
+            print(f"Error disabling PWM: {e}")
+    
+    def set_frequency_and_duty(self, frequency_hz, duty_percent):
+        """Set frequency in Hz and duty cycle as percentage"""
+        period_ns = int(1_000_000_000 / frequency_hz)
+        duty_cycle_ns = int(period_ns * duty_percent / 100)
+        
+        self.set_period(period_ns)
+        self.set_duty_cycle(duty_cycle_ns)
+
+def servo_control_example():
+    """Servo motor control example"""
+    pwm = LuckfoxPWM(0, 0)  # PWM chip 0, channel 0
+    
+    try:
+        # Servo frequency is typically 50Hz (20ms period)
+        pwm.set_period(20_000_000)  # 20ms in nanoseconds
+        pwm.enable()
+        
+        print("Servo control example - Moving servo through positions")
+        
+        # Servo positions (pulse width in nanoseconds)
+        positions = {
+            "0°": 1_000_000,    # 1ms pulse
+            "45°": 1_250_000,   # 1.25ms pulse
+            "90°": 1_500_000,   # 1.5ms pulse
+            "135°": 1_750_000,  # 1.75ms pulse
+            "180°": 2_000_000,  # 2ms pulse
+        }
+        
+        for angle, pulse_width in positions.items():
+            print(f"Moving to {angle}")
+            pwm.set_duty_cycle(pulse_width)
+            time.sleep(2)
+        
+        # Sweep servo back and forth
+        print("Sweeping servo...")
+        for _ in range(3):
+            for pulse_width in range(1_000_000, 2_000_000, 50_000):
+                pwm.set_duty_cycle(pulse_width)
+                time.sleep(0.1)
+            
+            for pulse_width in range(2_000_000, 1_000_000, -50_000):
+                pwm.set_duty_cycle(pulse_width)
+                time.sleep(0.1)
+    
+    finally:
+        pwm.unexport()
+
+def led_dimming_example():
+    """LED PWM dimming example"""
+    pwm = LuckfoxPWM(0, 1)  # PWM chip 0, channel 1
+    
+    try:
+        # LED dimming frequency (1kHz)
+        pwm.set_frequency_and_duty(1000, 0)
+        pwm.enable()
+        
+        print("LED dimming example - Fading in and out")
+        
+        # Fade in and out 5 times
+        for cycle in range(5):
+            print(f"Fade cycle {cycle + 1}/5")
+            
+            # Fade in
+            for brightness in range(0, 101, 2):
+                pwm.set_frequency_and_duty(1000, brightness)
+                time.sleep(0.05)
+            
+            # Fade out
+            for brightness in range(100, -1, -2):
+                pwm.set_frequency_and_duty(1000, brightness)
+                time.sleep(0.05)
+    
+    finally:
+        pwm.unexport()
+
+if __name__ == "__main__":
+    print("Luckfox Pico Mini PWM Examples")
+    print("1. Servo Control")
+    print("2. LED Dimming")
+    
+    choice = input("Select example (1 or 2): ")
+    
+    if choice == "1":
+        servo_control_example()
+    elif choice == "2":
+        led_dimming_example()
+    else:
+        print("Invalid choice")
+```
+
+## Camera Integration and Computer Vision
+
+### Camera Module Setup
+
+```bash
+# Enable camera interface
+sudo nano /boot/config.txt
+
+# Add camera configuration
+camera_auto_detect=1
+dtoverlay=imx219  # or appropriate overlay for your camera
+
+# Reboot to apply changes
+sudo reboot
+```
+
+### Camera Capture Application
+
+```python
+#!/usr/bin/env python3
+# luckfox_camera.py - Camera capture and processing
+
+import cv2
+import numpy as np
+import time
+import threading
+from datetime import datetime
+import os
+
+class LuckfoxCamera:
+    def __init__(self, device_id=0, resolution=(640, 480)):
+        self.device_id = device_id
+        self.resolution = resolution
+        self.cap = None
+        self.recording = False
+        self.frame_count = 0
+        
+    def initialize(self):
+        """Initialize camera"""
+        self.cap = cv2.VideoCapture(self.device_id)
+        
+        if not self.cap.isOpened():
+            raise Exception("Failed to open camera")
+        
+        # Set resolution
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        
+        print(f"Camera initialized: {self.resolution[0]}x{self.resolution[1]}")
+    
+    def capture_frame(self):
+        """Capture a single frame"""
+        if not self.cap:
+            return None
+            
+        ret, frame = self.cap.read()
+        if ret:
+            self.frame_count += 1
+            return frame
+        return None
+    
+    def capture_photo(self, filename=None):
+        """Capture and save a photo"""
+        frame = self.capture_frame()
+        if frame is None:
+            return False
+        
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"luckfox_photo_{timestamp}.jpg"
+        
+        cv2.imwrite(filename, frame)
+        print(f"Photo saved: {filename}")
+        return True
+    
+    def start_video_recording(self, filename=None, duration=10):
+        """Record video for specified duration"""
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"luckfox_video_{timestamp}.avi"
+        
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter(filename, fourcc, 20.0, self.resolution)
+        
+        print(f"Recording video for {duration} seconds...")
+        start_time = time.time()
+        
+        while time.time() - start_time < duration:
+            frame = self.capture_frame()
+            if frame is not None:
+                out.write(frame)
+                
+                # Show progress
+                elapsed = time.time() - start_time
+                print(f"\rRecording: {elapsed:.1f}/{duration}s", end="")
+            
+            time.sleep(0.05)  # ~20 FPS
+        
+        out.release()
+        print(f"\nVideo saved: {filename}")
+    
+    def motion_detection(self, sensitivity=1000):
+        """Basic motion detection"""
+        print("Starting motion detection (Press Ctrl+C to stop)")
+        
+        # Initialize background subtractor
+        backSub = cv2.createBackgroundSubtractorMOG2()
+        
+        motion_detected = False
+        frame_count = 0
+        
+        try:
+            while True:
+                frame = self.capture_frame()
+                if frame is None:
+                    continue
+                
+                frame_count += 1
+                
+                # Apply background subtraction
+                fgMask = backSub.apply(frame)
+                
+                # Count non-zero pixels (motion pixels)
+                motion_pixels = cv2.countNonZero(fgMask)
+                
+                # Check if motion exceeds sensitivity threshold
+                current_motion = motion_pixels > sensitivity
+                
+                if current_motion and not motion_detected:
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    print(f"\n[{timestamp}] Motion detected! Pixels: {motion_pixels}")
+                    
+                    # Save frame when motion is detected
+                    motion_filename = f"motion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+                    cv2.imwrite(motion_filename, frame)
+                    print(f"Motion frame saved: {motion_filename}")
+                
+                motion_detected = current_motion
+                
+                # Print status every 100 frames
+                if frame_count % 100 == 0:
+                    print(f"\rMonitoring... Frame: {frame_count}, Motion pixels: {motion_pixels}", end="")
+                
+                time.sleep(0.1)  # 10 FPS for motion detection
+                
+        except KeyboardInterrupt:
+            print("\nMotion detection stopped")
+    
+    def release(self):
+        """Release camera resources"""
+        if self.cap:
+            self.cap.release()
+            print("Camera released")
+
+def camera_examples():
+    """Run camera examples"""
+    camera = LuckfoxCamera(resolution=(640, 480))
+    
+    try:
+        camera.initialize()
+        
+        print("\nLuckfox Camera Examples:")
+        print("1. Capture Photo")
+        print("2. Record Video (10s)")
+        print("3. Motion Detection")
+        print("4. Time-lapse (60 photos, 1 per second)")
+        
+        choice = input("Select example (1-4): ")
+        
+        if choice == "1":
+            camera.capture_photo()
+            
+        elif choice == "2":
+            camera.start_video_recording(duration=10)
+            
+        elif choice == "3":
+            camera.motion_detection()
+            
+        elif choice == "4":
+            print("Starting time-lapse capture...")
+            for i in range(60):
+                filename = f"timelapse_{i:03d}.jpg"
+                camera.capture_photo(filename)
+                print(f"Captured frame {i+1}/60")
+                time.sleep(1)
+            print("Time-lapse complete!")
+            
+        else:
+            print("Invalid choice")
+    
+    finally:
+        camera.release()
+
+if __name__ == "__main__":
+    camera_examples()
+```
+
+## I2C and SPI Communication
+
+### I2C Sensor Interface
+
+```python
+#!/usr/bin/env python3
+# luckfox_i2c.py - I2C sensor communication
+
+import smbus
+import time
+from struct import unpack
+
+class BME280Sensor:
+    """BME280 Temperature, Humidity, and Pressure Sensor"""
+    
+    def __init__(self, i2c_bus=1, i2c_address=0x76):
+        self.bus = smbus.SMBus(i2c_bus)
+        self.address = i2c_address
+        self.calibration_data = {}
+        
+    def initialize(self):
+        """Initialize sensor and read calibration data"""
+        # Reset sensor
+        self.bus.write_byte_data(self.address, 0xE0, 0xB6)
+        time.sleep(0.1)
+        
+        # Read chip ID
+        chip_id = self.bus.read_byte_data(self.address, 0xD0)
+        if chip_id != 0x60:
+            raise Exception(f"Invalid chip ID: {chip_id}")
+        
+        # Read calibration coefficients
+        self._read_calibration_data()
+        
+        # Configure sensor
+        self.bus.write_byte_data(self.address, 0xF2, 0x01)  # Humidity oversampling x1
+        self.bus.write_byte_data(self.address, 0xF4, 0x25)  # Temp and pressure oversampling
+        self.bus.write_byte_data(self.address, 0xF5, 0x00)  # Config: standby time and filter
+        
+        print("BME280 sensor initialized")
+    
+    def _read_calibration_data(self):
+        """Read and store calibration coefficients"""
+        # Temperature coefficients
+        cal_data = self.bus.read_i2c_block_data(self.address, 0x88, 24)
+        self.calibration_data['T1'] = unpack('<H', bytes(cal_data[0:2]))[0]
+        self.calibration_data['T2'] = unpack('<h', bytes(cal_data[2:4]))[0]
+        self.calibration_data['T3'] = unpack('<h', bytes(cal_data[4:6]))[0]
+        
+        # Pressure coefficients
+        self.calibration_data['P1'] = unpack('<H', bytes(cal_data[6:8]))[0]
+        self.calibration_data['P2'] = unpack('<h', bytes(cal_data[8:10]))[0]
+        self.calibration_data['P3'] = unpack('<h', bytes(cal_data[10:12]))[0]
+        self.calibration_data['P4'] = unpack('<h', bytes(cal_data[12:14]))[0]
+        self.calibration_data['P5'] = unpack('<h', bytes(cal_data[14:16]))[0]
+        self.calibration_data['P6'] = unpack('<h', bytes(cal_data[16:18]))[0]
+        self.calibration_data['P7'] = unpack('<h', bytes(cal_data[18:20]))[0]
+        self.calibration_data['P8'] = unpack('<h', bytes(cal_data[20:22]))[0]
+        self.calibration_data['P9'] = unpack('<h', bytes(cal_data[22:24]))[0]
+        
+        # Humidity coefficients
+        self.calibration_data['H1'] = self.bus.read_byte_data(self.address, 0xA1)
+        
+        cal_data = self.bus.read_i2c_block_data(self.address, 0xE1, 7)
+        self.calibration_data['H2'] = unpack('<h', bytes(cal_data[0:2]))[0]
+        self.calibration_data['H3'] = cal_data[2]
+        self.calibration_data['H4'] = (cal_data[3] << 4) | (cal_data[4] & 0xF)
+        self.calibration_data['H5'] = (cal_data[5] << 4) | (cal_data[4] >> 4)
+        self.calibration_data['H6'] = cal_data[6]
+        
+        # Convert to signed if necessary
+        if self.calibration_data['H4'] > 2047:
+            self.calibration_data['H4'] -= 4096
+        if self.calibration_data['H5'] > 2047:
+            self.calibration_data['H5'] -= 4096
+        if self.calibration_data['H6'] > 127:
+            self.calibration_data['H6'] -= 256
+    
+    def read_raw_data(self):
+        """Read raw sensor data"""
+        data = self.bus.read_i2c_block_data(self.address, 0xF7, 8)
+        
+        pressure_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
+        temperature_raw = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4)
+        humidity_raw = (data[6] << 8) | data[7]
+        
+        return temperature_raw, pressure_raw, humidity_raw
+    
+    def read_compensated_data(self):
+        """Read and compensate sensor data"""
+        temp_raw, press_raw, hum_raw = self.read_raw_data()
+        
+        # Temperature compensation
+        var1 = (temp_raw / 16384.0 - self.calibration_data['T1'] / 1024.0) * self.calibration_data['T2']
+        var2 = ((temp_raw / 131072.0 - self.calibration_data['T1'] / 8192.0) * 
+                (temp_raw / 131072.0 - self.calibration_data['T1'] / 8192.0)) * self.calibration_data['T3']
+        t_fine = var1 + var2
+        temperature = t_fine / 5120.0
+        
+        # Pressure compensation
+        var1 = t_fine / 2.0 - 64000.0
+        var2 = var1 * var1 * self.calibration_data['P6'] / 32768.0
+        var2 = var2 + var1 * self.calibration_data['P5'] * 2.0
+        var2 = var2 / 4.0 + self.calibration_data['P4'] * 65536.0
+        var1 = (self.calibration_data['P3'] * var1 * var1 / 524288.0 + 
+                self.calibration_data['P2'] * var1) / 524288.0
+        var1 = (1.0 + var1 / 32768.0) * self.calibration_data['P1']
+        
+        if var1 == 0:
+            pressure = 0
+        else:
+            pressure = 1048576.0 - press_raw
+            pressure = ((pressure - var2 / 4096.0) * 6250.0) / var1
+            var1 = self.calibration_data['P9'] * pressure * pressure / 2147483648.0
+            var2 = pressure * self.calibration_data['P8'] / 32768.0
+            pressure = pressure + (var1 + var2 + self.calibration_data['P7']) / 16.0
+        
+        # Humidity compensation
+        h = t_fine - 76800.0
+        h = ((hum_raw - (self.calibration_data['H4'] * 64.0 + 
+                         self.calibration_data['H5'] / 16384.0 * h)) *
+             (self.calibration_data['H2'] / 65536.0 * 
+              (1.0 + self.calibration_data['H6'] / 67108864.0 * h * 
+               (1.0 + self.calibration_data['H3'] / 67108864.0 * h))))
+        humidity = h * (1.0 - self.calibration_data['H1'] * h / 524288.0)
+        
+        if humidity > 100.0:
+            humidity = 100.0
+        elif humidity < 0.0:
+            humidity = 0.0
+        
+        return temperature, pressure / 100.0, humidity  # Pressure in hPa
+
+def sensor_monitoring_example():
+    """Environmental monitoring example"""
+    try:
+        sensor = BME280Sensor()
+        sensor.initialize()
+        
+        print("Environmental Monitoring Started")
+        print("Temperature | Pressure | Humidity | Altitude")
+        print("-" * 50)
+        
+        baseline_pressure = None
+        
+        for i in range(100):  # Run for 100 readings
+            temp, pressure, humidity = sensor.read_compensated_data()
+            
+            # Calculate approximate altitude (assuming sea level = 1013.25 hPa)
+            if baseline_pressure is None:
+                baseline_pressure = 1013.25
+            
+            altitude = 44330.0 * (1.0 - pow(pressure / baseline_pressure, 0.1903))
+            
+            print(f"{temp:8.2f}°C | {pressure:8.2f} hPa | {humidity:7.1f}% | {altitude:7.1f}m")
+            
+            # Log data to file every 10 readings
+            if i % 10 == 0:
+                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                with open("sensor_data.csv", "a") as f:
+                    f.write(f"{timestamp},{temp:.2f},{pressure:.2f},{humidity:.1f},{altitude:.1f}\n")
+            
+            time.sleep(2)  # Read every 2 seconds
+    
+    except Exception as e:
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    # Ensure I2C is enabled
+    print("BME280 Environmental Sensor Example")
+    print("Make sure I2C is enabled and BME280 is connected to I2C1")
+    input("Press Enter to continue...")
+    
+    sensor_monitoring_example()
+```
+
+## System Optimization and Performance
+
+### Performance Monitoring Script
+
+```bash
+#!/bin/bash
+# luckfox_monitor.sh - System performance monitoring
+
+echo "Luckfox Pico Mini - System Monitor"
+echo "=================================="
+
+# Create log directory
+mkdir -p ~/system_logs
+
+# Function to log system stats
+log_system_stats() {
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    # CPU usage
+    cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
+    
+    # Memory usage
+    memory_info=$(free -m | grep Mem:)
+    memory_total=$(echo $memory_info | awk '{print $2}')
+    memory_used=$(echo $memory_info | awk '{print $3}')
+    memory_percent=$((memory_used * 100 / memory_total))
+    
+    # Temperature (if available)
+    temp=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo "N/A")
+    if [ "$temp" != "N/A" ]; then
+        temp=$((temp / 1000))
+        temp="${temp}°C"
+    fi
+    
+    # Disk usage
+    disk_usage=$(df -h / | tail -1 | awk '{print $5}')
+    
+    # Network stats
+    network_stats=$(cat /proc/net/dev | grep -E "(eth0|wlan0)" | head -1)
+    if [ ! -z "$network_stats" ]; then
+        rx_bytes=$(echo $network_stats | awk '{print $2}')
+        tx_bytes=$(echo $network_stats | awk '{print $10}')
+    else
+        rx_bytes="0"
+        tx_bytes="0"
+    fi
+    
+    # Log to file
+    echo "$timestamp,CPU:${cpu_usage}%,Memory:${memory_percent}%,Temp:$temp,Disk:$disk_usage,RX:$rx_bytes,TX:$tx_bytes" >> ~/system_logs/system_stats.csv
+    
+    # Display current stats
+    echo "[$timestamp] CPU: ${cpu_usage}% | Memory: ${memory_percent}% | Temp: $temp | Disk: $disk_usage"
+}
+
+# Function to optimize system
+optimize_system() {
+    echo "Optimizing system performance..."
+    
+    # Update package cache
+    sudo apt update
+    
+    # Clear package cache
+    sudo apt autoremove -y
+    sudo apt autoclean
+    
+    # Clear logs older than 7 days
+    sudo journalctl --vacuum-time=7d
+    
+    # Optimize swappiness (if swap is available)
+    echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
+    
+    # Set CPU governor to performance
+    if [ -f /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]; then
+        echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+    fi
+    
+    echo "System optimization complete"
+}
+
+# Function to monitor GPIO usage
+monitor_gpio() {
+    echo "GPIO Pin States:"
+    echo "==============="
+    
+    for pin in 2 3 4 17 27 22 10 9 11 18 23 24 25 8 7; do
+        if [ -d "/sys/class/gpio/gpio$pin" ]; then
+            direction=$(cat /sys/class/gpio/gpio$pin/direction 2>/dev/null || echo "unknown")
+            value=$(cat /sys/class/gpio/gpio$pin/value 2>/dev/null || echo "unknown")
+            echo "GPIO$pin: $direction, value: $value"
+        fi
+    done
+}
+
+# Main menu
+case "$1" in
+    "monitor")
+        echo "Starting system monitoring (Ctrl+C to stop)..."
+        while true; do
+            log_system_stats
+            sleep 5
+        done
+        ;;
+    "optimize")
+        optimize_system
+        ;;
+    "gpio")
+        monitor_gpio
+        ;;
+    *)
+        echo "Usage: $0 {monitor|optimize|gpio}"
+        echo "  monitor  - Continuous system monitoring"
+        echo "  optimize - Optimize system performance"
+        echo "  gpio     - Show GPIO pin states"
+        ;;
+esac
+```
+
+## Advanced Applications and Integration
+
+### Home Automation Controller
+
+```python
+#!/usr/bin/env python3
+# luckfox_home_automation.py - Smart home controller
+
+import json
+import time
+import threading
+import socket
+from datetime import datetime
+from luckfox_gpio import LuckfoxGPIO, GPIOMode
+from luckfox_pwm import LuckfoxPWM
+
+class HomeAutomationController:
+    def __init__(self):
+        self.gpio = LuckfoxGPIO()
+        self.devices = {}
+        self.schedules = []
+        self.running = False
+        
+        # Device pin mappings
+        self.pin_map = {
+            'living_room_light': 18,
+            'bedroom_light': 19,
+            'kitchen_light': 20,
+            'front_door_sensor': 21,
+            'motion_sensor': 22,
+            'garage_door': 23,
+            'water_pump': 24,
+            'fan_control': 25
+        }
+        
+        # Initialize all devices as outputs (except sensors)
+        sensors = ['front_door_sensor', 'motion_sensor']
+        for device, pin in self.pin_map.items():
+            if device in sensors:
+                self.gpio.set_mode(pin, GPIOMode.INPUT)
+            else:
+                self.gpio.set_mode(pin, GPIOMode.OUTPUT)
+                self.gpio.digital_write(pin, False)  # Start with devices off
+            
+            self.devices[device] = {'pin': pin, 'state': False, 'type': 'sensor' if device in sensors else 'output'}
+    
+    def control_device(self, device_name, state):
+        """Control a specific device"""
+        if device_name not in self.devices:
+            return False
+        
+        device = self.devices[device_name]
+        if device['type'] == 'output':
+            self.gpio.digital_write(device['pin'], state)
+            device['state'] = state
+            print(f"{device_name}: {'ON' if state else 'OFF'}")
+            return True
+        return False
+    
+    def read_sensor(self, sensor_name):
+        """Read sensor state"""
+        if sensor_name not in self.devices:
+            return None
+        
+        device = self.devices[sensor_name]
+        if device['type'] == 'sensor':
+            state = self.gpio.digital_read(device['pin'])
+            device['state'] = state
+            return state
+        return None
+    
+    def add_schedule(self, device_name, time_str, action):
+        """Add a scheduled action"""
+        schedule_item = {
+            'device': device_name,
+            'time': time_str,  # Format: "HH:MM"
+            'action': action,  # True for ON, False for OFF
+            'enabled': True
+        }
+        self.schedules.append(schedule_item)
+        print(f"Schedule added: {device_name} {action} at {time_str}")
+    
+    def check_schedules(self):
+        """Check and execute scheduled actions"""
+        current_time = datetime.now().strftime("%H:%M")
+        
+        for schedule in self.schedules:
+            if schedule['enabled'] and schedule['time'] == current_time:
+                self.control_device(schedule['device'], schedule['action'])
+                schedule['enabled'] = False  # Prevent multiple executions
+                
+                # Re-enable for next day
+                threading.Timer(86400, lambda: schedule.update({'enabled': True})).start()
+    
+    def security_monitoring(self):
+        """Security monitoring thread"""
+        door_was_open = False
+        motion_detected = False
+        
+        while self.running:
+            # Check door sensor
+            door_open = self.read_sensor('front_door_sensor')
+            if door_open and not door_was_open:
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                print(f"[SECURITY] {timestamp} - Front door opened!")
+                
+                # Turn on lights for security
+                self.control_device('living_room_light', True)
+                
+            door_was_open = door_open
+            
+            # Check motion sensor
+            motion = self.read_sensor('motion_sensor')
+            if motion and not motion_detected:
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                print(f"[SECURITY] {timestamp} - Motion detected!")
+                
+                # Auto-lighting based on time
+                current_hour = datetime.now().hour
+                if current_hour >= 18 or current_hour <= 6:  # Evening/night
+                    self.control_device('living_room_light', True)
+            
+            motion_detected = motion
+            time.sleep(0.5)  # Check every 500ms
+    
+    def web_api_server(self, port=8080):
+        """Simple web API for device control"""
+        import http.server
+        import socketserver
+        from urllib.parse import parse_qs, urlparse
+        
+        class DeviceHandler(http.server.BaseHTTPRequestHandler):
+            def __init__(self, controller, *args, **kwargs):
+                self.controller = controller
+                super().__init__(*args, **kwargs)
+            
+            def do_GET(self):
+                if self.path == '/status':
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    
+                    status = {
+                        'timestamp': datetime.now().isoformat(),
+                        'devices': self.controller.devices
+                    }
+                    self.wfile.write(json.dumps(status).encode())
+                
+                elif self.path.startswith('/control'):
+                    query = urlparse(self.path).query
+                    params = parse_qs(query)
+                    
+                    device = params.get('device', [None])[0]
+                    action = params.get('action', [None])[0]
+                    
+                    if device and action in ['on', 'off']:
+                        state = action == 'on'
+                        success = self.controller.control_device(device, state)
+                        
+                        self.send_response(200 if success else 400)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        
+                        response = {'success': success, 'device': device, 'state': state}
+                        self.wfile.write(json.dumps(response).encode())
+                    else:
+                        self.send_response(400)
+                        self.end_headers()
+                
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+        
+        handler = lambda *args, **kwargs: DeviceHandler(self, *args, **kwargs)
+        
+        with socketserver.TCPServer(("", port), handler) as httpd:
+            print(f"Web API server running on port {port}")
+            httpd.serve_forever()
+    
+    def start(self):
+        """Start the home automation system"""
+        self.running = True
+        
+        # Start security monitoring thread
+        security_thread = threading.Thread(target=self.security_monitoring)
+        security_thread.daemon = True
+        security_thread.start()
+        
+        # Start web API server thread
+        api_thread = threading.Thread(target=self.web_api_server)
+        api_thread.daemon = True
+        api_thread.start()
+        
+        print("Home Automation System Started")
+        print("Web API available at http://localhost:8080")
+        print("Commands: /status, /control?device=DEVICE&action=on|off")
+        
+        # Main loop for scheduled tasks
+        try:
+            while True:
+                self.check_schedules()
+                
+                # Print status every 30 seconds
+                if int(time.time()) % 30 == 0:
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    print(f"[{timestamp}] System running - Devices active: {sum(1 for d in self.devices.values() if d['state'])}")
+                
+                time.sleep(1)
+        
+        except KeyboardInterrupt:
+            print("\nShutting down home automation system...")
+            self.running = False
+            self.gpio.cleanup()
+
+def main():
+    controller = HomeAutomationController()
+    
+    # Add some example schedules
+    controller.add_schedule('living_room_light', '18:00', True)   # Turn on at 6 PM
+    controller.add_schedule('living_room_light', '23:00', False)  # Turn off at 11 PM
+    controller.add_schedule('water_pump', '06:00', True)          # Water plants at 6 AM
+    controller.add_schedule('water_pump', '06:05', False)         # Stop watering after 5 minutes
+    
+    print("Home Automation Controller")
+    print("=========================")
+    print("Configured devices:")
+    for device, info in controller.devices.items():
+        print(f"  {device}: GPIO{info['pin']} ({info['type']})")
+    
+    controller.start()
+
+if __name__ == "__main__":
+    main()
+```
+
+## Troubleshooting and Maintenance
+
+### Common Issues and Solutions
+
+**Boot Issues:**
+```bash
+# Check boot process
+journalctl -b
+
+# Check SD card health
+sudo fsck /dev/mmcblk0p1
+
+# Backup and restore
+sudo dd if=/dev/mmcblk0 of=luckfox_backup.img bs=4M status=progress
+```
+
+**GPIO Permission Issues:**
+```bash
+# Add user to gpio group
+sudo usermod -a -G gpio $USER
+
+# Set GPIO permissions
+sudo chown root:gpio /sys/class/gpio/export
+sudo chown root:gpio /sys/class/gpio/unexport
+```
+
+**Camera Not Working:**
+```bash
+# Check camera detection
+lsusb
+v4l2-ctl --list-devices
+
+# Test camera
+fswebcam -d /dev/video0 test.jpg
+```
+
+This comprehensive guide provides everything needed to work with the Luckfox Pico Mini, from basic setup to advanced IoT applications, making it an excellent resource for embedded Linux development.

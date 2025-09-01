@@ -1,0 +1,417 @@
+---
+title: "Configuración de Bootloader ESP32: Guía Completa"
+date: 2024-06-10
+description: "Aprende a configurar y personalizar bootloaders para microcontroladores ESP32, incluyendo particiones, OTA y recuperación de firmware."
+author: "Jesus Velez"
+tags: ["esp32", "bootloader", "embedded", "firmware", "iot"]
+---
+
+# Configuración de Bootloader ESP32: Guía Completa
+
+El bootloader es el primer programa que se ejecuta en un ESP32. En esta guía aprenderás cómo configurarlo, personalizarlo y resolver problemas comunes.
+
+## ¿Qué es un Bootloader?
+
+El bootloader es un pequeño programa que:
+- Se ejecuta inmediatamente después del reset
+- Inicializa el hardware básico
+- Decide qué aplicación cargar
+- Maneja actualizaciones OTA
+- Proporciona recuperación de errores
+
+## Arquitectura del ESP32
+
+### Mapa de Memoria Flash
+
+```
+Dirección    | Tamaño | Descripción
+-------------|--------|------------------
+0x1000       | 28KB   | Bootloader
+0x8000       | 4KB    | Tabla de particiones
+0x9000       | 16KB   | NVS (configuración)
+0xD000       | 8KB    | OTA data
+0x10000      | 1MB    | Aplicación principal
+0x110000     | 1MB    | OTA app (opcional)
+0x210000     | 1MB    | SPIFFS/LittleFS
+```
+
+## Configuración con ESP-IDF
+
+### 1. Configuración Básica
+
+```bash
+# Clonar ESP-IDF
+git clone https://github.com/espressif/esp-idf.git
+cd esp-idf
+git checkout release/v5.1
+./install.sh
+
+# Configurar environment
+. ./export.sh
+
+# Crear proyecto
+idf.py create-project bootloader_config
+cd bootloader_config
+```
+
+### 2. Configuración de Particiones
+
+Crear `partitions.csv`:
+
+```csv
+# Name,   Type, SubType, Offset,  Size,     Flags
+nvs,      data, nvs,     0x9000,  0x4000,
+otadata,  data, ota,     0xd000,  0x2000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory, 0x10000, 1M,
+ota_0,    app,  ota_0,   0x110000, 1M,
+ota_1,    app,  ota_1,   0x210000, 1M,
+storage,  data, spiffs,  0x310000, 0xF0000,
+```
+
+### 3. Configuración del Bootloader (sdkconfig)
+
+```ini
+# Bootloader config
+CONFIG_BOOTLOADER_LOG_LEVEL_INFO=y
+CONFIG_BOOTLOADER_SKIP_VALIDATE_IN_DEEP_SLEEP=y
+CONFIG_BOOTLOADER_WDT_ENABLE=y
+CONFIG_BOOTLOADER_WDT_TIME_MS=9000
+
+# Security features
+CONFIG_SECURE_BOOT_ENABLED=n
+CONFIG_SECURE_FLASH_ENC_ENABLED=n
+
+# OTA config
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+CONFIG_BOOTLOADER_FACTORY_RESET=y
+CONFIG_BOOTLOADER_RESERVE_RTC_SIZE=512
+
+# Partition table
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+```
+
+## Bootloader Personalizado
+
+### 1. Estructura del Proyecto
+
+```
+proyecto/
+├── main/
+│   ├── main.c
+│   └── CMakeLists.txt
+├── bootloader_components/
+│   └── my_bootloader/
+│       ├── bootloader_start.c
+│       └── CMakeLists.txt
+├── partitions.csv
+├── sdkconfig
+└── CMakeLists.txt
+```
+
+### 2. Bootloader Personalizado
+
+```c
+// bootloader_components/my_bootloader/bootloader_start.c
+#include "esp_log.h"
+#include "bootloader_init.h"
+#include "bootloader_utility.h"
+#include "bootloader_common.h"
+
+static const char *TAG = "MY_BOOT";
+
+void bootloader_main(void)
+{
+    ESP_LOGI(TAG, "Custom Bootloader Starting...");
+    
+    // Inicialización básica del hardware
+    if (bootloader_init() != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to init bootloader");
+        return;
+    }
+    
+    // Verificar GPIO para factory reset
+    if (bootloader_common_gpio_hold_reset_disable() == true) {
+        ESP_LOGW(TAG, "GPIO0 held - Factory reset triggered");
+        const esp_partition_t *factory_partition = 
+            esp_partition_find_first(ESP_PARTITION_TYPE_APP, 
+                                   ESP_PARTITION_SUBTYPE_APP_FACTORY, 
+                                   NULL);
+        if (factory_partition != NULL) {
+            bootloader_utility_load_image(factory_partition);
+        }
+    }
+    
+    // LED de status durante boot
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << 2),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = 0,
+        .pull_down_en = 0,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    gpio_config(&io_conf);
+    gpio_set_level(2, 1); // LED ON
+    
+    // Seleccionar y cargar aplicación
+    const esp_partition_t *load_partition = 
+        bootloader_utility_get_selected_boot_partition();
+    
+    if (load_partition != NULL) {
+        ESP_LOGI(TAG, "Loading app from partition: %s", load_partition->label);
+        bootloader_utility_load_image(load_partition);
+    } else {
+        ESP_LOGE(TAG, "No valid app partition found");
+    }
+}
+```
+
+### 3. CMakeLists.txt del Bootloader
+
+```cmake
+# bootloader_components/my_bootloader/CMakeLists.txt
+idf_component_register(
+    SRCS "bootloader_start.c"
+    INCLUDE_DIRS "."
+    REQUIRES bootloader_support log
+)
+```
+
+## Configuración OTA
+
+### 1. Aplicación Principal con OTA
+
+```c
+// main/main.c
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "esp_log.h"
+#include "esp_ota_ops.h"
+#include "esp_http_client.h"
+#include "esp_wifi.h"
+#include "nvs_flash.h"
+
+static const char *TAG = "OTA_APP";
+
+void check_ota_partition(void)
+{
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    esp_ota_img_states_t ota_state;
+    
+    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+            ESP_LOGI(TAG, "First boot after OTA. Verifying image...");
+            
+            // Aquí puedes agregar verificaciones adicionales
+            bool image_ok = true; // Tu lógica de verificación
+            
+            if (image_ok) {
+                ESP_LOGI(TAG, "Image verified successfully");
+                esp_ota_mark_app_valid_cancel_rollback();
+            } else {
+                ESP_LOGE(TAG, "Image verification failed");
+                esp_restart();
+            }
+        }
+    }
+}
+
+void app_main(void)
+{
+    // Inicializar NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+    
+    // Verificar estado OTA
+    check_ota_partition();
+    
+    ESP_LOGI(TAG, "Application started successfully");
+    
+    // Tu aplicación principal aquí
+    while (1) {
+        ESP_LOGI(TAG, "App running...");
+        vTaskDelay(pdMS_TO_TICKS(10000));
+    }
+}
+```
+
+## Factory Reset
+
+### 1. Configuración GPIO
+
+```c
+// bootloader_components/my_bootloader/factory_reset.c
+#include "bootloader_common.h"
+#include "soc/gpio_reg.h"
+#include "soc/rtc_io_reg.h"
+
+#define FACTORY_RESET_PIN 0
+
+bool check_factory_reset(void)
+{
+    // Configurar GPIO0 como input con pull-up
+    gpio_pad_select_gpio(FACTORY_RESET_PIN);
+    gpio_set_direction(FACTORY_RESET_PIN, GPIO_MODE_INPUT);
+    gpio_pullup_en(FACTORY_RESET_PIN);
+    
+    // Esperar estabilización
+    bootloader_common_delay_ms(100);
+    
+    // Leer estado del pin
+    int pin_state = gpio_get_level(FACTORY_RESET_PIN);
+    
+    if (pin_state == 0) {
+        ESP_LOGI(TAG, "Factory reset pin LOW - checking duration");
+        
+        // Verificar que se mantenga presionado por 3 segundos
+        int count = 0;
+        for (int i = 0; i < 30; i++) {
+            bootloader_common_delay_ms(100);
+            if (gpio_get_level(FACTORY_RESET_PIN) == 0) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        
+        return (count >= 30); // 3 segundos
+    }
+    
+    return false;
+}
+```
+
+## Debugging del Bootloader
+
+### 1. Logs Detallados
+
+```c
+// En bootloader_start.c
+#define BOOTLOADER_BUILD_TIME __DATE__ " " __TIME__
+
+void print_bootloader_info(void)
+{
+    ESP_LOGI(TAG, "====== Custom Bootloader ======");
+    ESP_LOGI(TAG, "Build time: %s", BOOTLOADER_BUILD_TIME);
+    ESP_LOGI(TAG, "ESP-IDF version: %s", esp_get_idf_version());
+    ESP_LOGI(TAG, "Chip revision: %d", esp_chip_info.revision);
+    ESP_LOGI(TAG, "Flash size: %dMB", spi_flash_get_chip_size() / (1024 * 1024));
+    
+    // Información de particiones
+    const esp_partition_t *factory = esp_partition_find_first(
+        ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_FACTORY, NULL);
+    if (factory) {
+        ESP_LOGI(TAG, "Factory partition: 0x%x, size: %d", 
+                factory->address, factory->size);
+    }
+}
+```
+
+### 2. Monitor Serie
+
+```bash
+# Monitoring continuo
+idf.py monitor
+
+# Con filtros específicos
+idf.py monitor --print_filter="MY_BOOT:I"
+
+# Monitor con timestamps
+idf.py monitor --timestamps
+```
+
+## Seguridad del Bootloader
+
+### 1. Secure Boot
+
+```ini
+# sdkconfig
+CONFIG_SECURE_BOOT_ENABLED=y
+CONFIG_SECURE_BOOTLOADER_MODE_ONE_TIME_FLASH=y
+CONFIG_SECURE_BOOT_BUILD_SIGNED_BINARIES=y
+```
+
+### 2. Flash Encryption
+
+```ini
+# sdkconfig
+CONFIG_SECURE_FLASH_ENC_ENABLED=y
+CONFIG_SECURE_FLASH_ENCRYPTION_MODE_DEVELOPMENT=y
+```
+
+## Herramientas de Desarrollo
+
+### 1. Flashing Manual
+
+```bash
+# Flash bootloader personalizado
+esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 \
+  write_flash 0x1000 build/bootloader/bootloader.bin
+
+# Flash tabla de particiones
+esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 \
+  write_flash 0x8000 build/partition_table/partition-table.bin
+
+# Flash aplicación
+esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 \
+  write_flash 0x10000 build/my_app.bin
+```
+
+### 2. Verificación de Particiones
+
+```bash
+# Leer información de particiones
+esptool.py --port /dev/ttyUSB0 read_flash 0x8000 0x1000 partition_table.bin
+python $IDF_PATH/components/partition_table/gen_esp32part.py partition_table.bin
+```
+
+## Troubleshooting
+
+### Problemas Comunes
+
+1. **Boot Loop Infinito**
+```bash
+# Verificar logs
+idf.py monitor
+
+# Factory reset forzado
+esptool.py erase_flash
+```
+
+2. **Partition Table Corrupta**
+```bash
+# Re-flash partition table
+idf.py partition-table-flash
+```
+
+3. **OTA Rollback**
+```c
+// En la aplicación
+esp_ota_mark_app_invalid_rollback_and_reboot();
+```
+
+## Conclusión
+
+Un bootloader bien configurado es crucial para:
+- ✅ **Recuperación**: Factory reset y rollback automático
+- ✅ **OTA Updates**: Actualizaciones seguras remotas
+- ✅ **Debugging**: Logs detallados y troubleshooting
+- ✅ **Seguridad**: Secure boot y flash encryption
+- ✅ **Flexibilidad**: Múltiples particiones de aplicación
+
+## Próximos Pasos
+
+1. Implementar bootloader con menú interactivo
+2. Agregar verificación de integridad CRC32
+3. Configurar dual-boot con selección automática
+4. Implementar bootloader para ESP32-S3/C3
+
+¿Necesitas ayuda con algún aspecto específico del bootloader ESP32? ¡Déjame un comentario!

@@ -1,0 +1,1166 @@
+
+---
+title: Zephyr RTOS Complete Guide for ESP32
+date: 2024-08-15
+description: Complete guide to developing real-time applications with Zephyr RTOS on ESP32, covering installation, configuration, threading, and IoT integration.
+author: Jesus Velez
+tags: [Zephyr, ESP32, RTOS, IoT, Embedded, C++, Real-time]
+layout: ../../layouts/PostLayout.astro
+---
+
+# Zephyr RTOS Complete Guide for ESP32
+
+Zephyr RTOS is a scalable, secure, and feature-rich real-time operating system designed for resource-constrained devices. In this comprehensive guide, we'll explore how to develop applications with Zephyr on ESP32, from basic setup to advanced IoT integration.
+
+## What is Zephyr RTOS?
+
+Zephyr is an open-source, scalable real-time operating system (RTOS) optimized for resource-constrained devices across multiple architectures. Key features include:
+
+- **Modular Architecture**: Include only what you need
+- **Memory Protection**: Userspace and supervisor mode separation
+- **Thread Safety**: Built-in synchronization primitives
+- **Power Management**: Advanced power saving features
+- **Connectivity Stack**: Bluetooth, WiFi, cellular, and more
+- **Security Features**: Trusted execution environment support
+
+## Prerequisites and Environment Setup
+
+### Installing Zephyr SDK
+
+First, install the required dependencies and Zephyr SDK:
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install --no-install-recommends git cmake ninja-build gperf \
+  ccache dfu-util device-tree-compiler wget \
+  python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file \
+  make gcc gcc-multilib g++-multilib libsdl2-dev
+
+# Install West (Zephyr's meta-tool)
+pip3 install --user -U west
+
+# Verify installation
+west --version
+```
+
+### Setting up Zephyr Workspace
+
+```bash
+# Create workspace
+mkdir zephyr-esp32-workspace
+cd zephyr-esp32-workspace
+
+# Initialize west workspace
+west init zephyr-rtos
+cd zephyr-rtos
+
+# Update Zephyr modules
+west update
+
+# Export Zephyr CMake package (add to ~/.bashrc)
+west zephyr-export
+
+# Install Python dependencies
+pip3 install --user -r zephyr/scripts/requirements.txt
+```
+
+### ESP32 Toolchain Setup
+
+```bash
+# Install ESP-IDF toolchain
+cd ~/
+git clone --recursive https://github.com/espressif/esp-idf.git
+cd esp-idf
+./install.sh esp32
+
+# Set environment variables (add to ~/.bashrc)
+export IDF_PATH="$HOME/esp-idf"
+export PATH="$PATH:$IDF_PATH/tools"
+source $IDF_PATH/export.sh
+```
+
+## Creating Your First Zephyr Application
+
+### Basic Application Structure
+
+Create a simple LED blink application:
+
+```c
+// src/main.c
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/printk.h>
+
+/* LED configuration */
+#define LED_NODE DT_ALIAS(led0)
+#define LED_PORT DEVICE_DT_GET(DT_GPIO_CTLR(LED_NODE, gpios))
+#define LED_PIN DT_GPIO_PIN(LED_NODE, gpios)
+#define LED_FLAGS DT_GPIO_FLAGS(LED_NODE, gpios)
+
+/* Thread stack size and priority */
+#define THREAD_STACK_SIZE 1024
+#define THREAD_PRIORITY 5
+
+/* Global variables */
+K_THREAD_STACK_DEFINE(led_stack, THREAD_STACK_SIZE);
+struct k_thread led_thread_data;
+
+void led_thread(void *arg1, void *arg2, void *arg3)
+{
+    const struct device *led_dev = LED_PORT;
+    bool led_state = true;
+
+    if (!device_is_ready(led_dev)) {
+        printk("LED device not ready\n");
+        return;
+    }
+
+    /* Configure LED pin */
+    gpio_pin_configure(led_dev, LED_PIN, GPIO_OUTPUT_ACTIVE | LED_FLAGS);
+
+    printk("LED Thread Started - ESP32 with Zephyr RTOS\n");
+
+    while (1) {
+        /* Toggle LED */
+        gpio_pin_set(led_dev, LED_PIN, (int)led_state);
+        led_state = !led_state;
+
+        printk("LED %s\n", led_state ? "OFF" : "ON");
+        
+        /* Sleep for 1 second */
+        k_msleep(1000);
+    }
+}
+
+int main(void)
+{
+    printk("Starting Zephyr RTOS on ESP32\n");
+    printk("Kernel version: %s\n", KERNEL_VERSION_STRING);
+
+    /* Create LED control thread */
+    k_thread_create(&led_thread_data, led_stack,
+                    K_THREAD_STACK_SIZEOF(led_stack),
+                    led_thread, NULL, NULL, NULL,
+                    THREAD_PRIORITY, 0, K_NO_WAIT);
+
+    /* Main thread can perform other tasks */
+    while (1) {
+        printk("Main thread heartbeat\n");
+        k_sleep(K_SECONDS(5));
+    }
+
+    return 0;
+}
+```
+
+### Project Configuration Files
+
+**prj.conf** (Project configuration):
+```ini
+# Enable GPIO driver
+CONFIG_GPIO=y
+
+# Enable console and logging
+CONFIG_CONSOLE=y
+CONFIG_UART_CONSOLE=y
+CONFIG_SERIAL=y
+CONFIG_LOG=y
+CONFIG_LOG_DEFAULT_LEVEL=3
+
+# Enable threading
+CONFIG_MULTITHREADING=y
+CONFIG_NUM_PREEMPT_PRIORITIES=15
+
+# Memory configuration
+CONFIG_MAIN_STACK_SIZE=2048
+CONFIG_HEAP_MEM_POOL_SIZE=16384
+
+# ESP32 specific settings
+CONFIG_ESP32_WIFI_STACK_WPA_SUPPLICANT=y
+```
+
+**CMakeLists.txt**:
+```cmake
+cmake_minimum_required(VERSION 3.20.0)
+
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(esp32_zephyr_app)
+
+target_sources(app PRIVATE src/main.c)
+
+# Additional source files
+target_sources(app PRIVATE 
+    src/sensors.c
+    src/wifi_manager.c
+    src/mqtt_client.c
+)
+
+# Include directories
+target_include_directories(app PRIVATE include)
+```
+
+## Advanced Threading and Synchronization
+
+### Multi-threaded Sensor Application
+
+```c
+// src/sensors.c
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/sensor.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/random/rand32.h>
+
+/* Thread definitions */
+#define SENSOR_STACK_SIZE 2048
+#define PROCESSING_STACK_SIZE 2048
+#define SENSOR_PRIORITY 10
+#define PROCESSING_PRIORITY 8
+
+/* Message queue for sensor data */
+#define MSG_QUEUE_SIZE 10
+
+struct sensor_data {
+    int32_t temperature;
+    int32_t humidity;
+    int32_t pressure;
+    int64_t timestamp;
+};
+
+/* Kernel objects */
+K_THREAD_STACK_DEFINE(sensor_stack, SENSOR_STACK_SIZE);
+K_THREAD_STACK_DEFINE(processing_stack, PROCESSING_STACK_SIZE);
+struct k_thread sensor_thread_data;
+struct k_thread processing_thread_data;
+
+K_MSGQ_DEFINE(sensor_msgq, sizeof(struct sensor_data), MSG_QUEUE_SIZE, 4);
+K_MUTEX_DEFINE(data_mutex);
+K_SEM_DEFINE(data_ready_sem, 0, 1);
+
+/* Shared data structure */
+struct sensor_stats {
+    int32_t min_temp;
+    int32_t max_temp;
+    int32_t avg_temp;
+    uint32_t sample_count;
+};
+
+static struct sensor_stats stats = {
+    .min_temp = INT32_MAX,
+    .max_temp = INT32_MIN,
+    .avg_temp = 0,
+    .sample_count = 0
+};
+
+void sensor_thread(void *arg1, void *arg2, void *arg3)
+{
+    struct sensor_data data;
+    int ret;
+
+    printk("Sensor thread started\n");
+
+    while (1) {
+        /* Simulate sensor readings */
+        data.temperature = 200 + (sys_rand32_get() % 300); // 20.0 - 50.0°C
+        data.humidity = 300 + (sys_rand32_get() % 400);    // 30 - 70%
+        data.pressure = 1000 + (sys_rand32_get() % 200);   // 1000 - 1200 hPa
+        data.timestamp = k_uptime_get();
+
+        /* Send data to processing thread */
+        ret = k_msgq_put(&sensor_msgq, &data, K_NO_WAIT);
+        if (ret < 0) {
+            printk("Message queue full, dropping sample\n");
+        } else {
+            k_sem_give(&data_ready_sem);
+        }
+
+        /* Sample every 2 seconds */
+        k_msleep(2000);
+    }
+}
+
+void processing_thread(void *arg1, void *arg2, void *arg3)
+{
+    struct sensor_data data;
+    int ret;
+
+    printk("Processing thread started\n");
+
+    while (1) {
+        /* Wait for data available */
+        k_sem_take(&data_ready_sem, K_FOREVER);
+
+        /* Get data from queue */
+        ret = k_msgq_get(&sensor_msgq, &data, K_NO_WAIT);
+        if (ret < 0) {
+            continue;
+        }
+
+        /* Process data with mutex protection */
+        k_mutex_lock(&data_mutex, K_FOREVER);
+        
+        stats.sample_count++;
+        
+        if (data.temperature < stats.min_temp) {
+            stats.min_temp = data.temperature;
+        }
+        
+        if (data.temperature > stats.max_temp) {
+            stats.max_temp = data.temperature;
+        }
+        
+        /* Calculate running average */
+        stats.avg_temp = ((stats.avg_temp * (stats.sample_count - 1)) + 
+                         data.temperature) / stats.sample_count;
+        
+        k_mutex_unlock(&data_mutex);
+
+        /* Print sensor data */
+        printk("Sample #%u - Temp: %d.%d°C, Humidity: %d.%d%%, "
+               "Pressure: %d hPa, Time: %lld ms\n",
+               stats.sample_count,
+               data.temperature / 10, data.temperature % 10,
+               data.humidity / 10, data.humidity % 10,
+               data.pressure,
+               data.timestamp);
+
+        /* Print statistics every 10 samples */
+        if (stats.sample_count % 10 == 0) {
+            k_mutex_lock(&data_mutex, K_FOREVER);
+            printk("=== Statistics ===\n");
+            printk("Min Temp: %d.%d°C\n", 
+                   stats.min_temp / 10, stats.min_temp % 10);
+            printk("Max Temp: %d.%d°C\n", 
+                   stats.max_temp / 10, stats.max_temp % 10);
+            printk("Avg Temp: %d.%d°C\n", 
+                   stats.avg_temp / 10, stats.avg_temp % 10);
+            printk("Total Samples: %u\n", stats.sample_count);
+            printk("==================\n");
+            k_mutex_unlock(&data_mutex);
+        }
+    }
+}
+
+int sensor_system_init(void)
+{
+    /* Create sensor reading thread */
+    k_thread_create(&sensor_thread_data, sensor_stack,
+                    K_THREAD_STACK_SIZEOF(sensor_stack),
+                    sensor_thread, NULL, NULL, NULL,
+                    SENSOR_PRIORITY, 0, K_NO_WAIT);
+
+    /* Create data processing thread */
+    k_thread_create(&processing_thread_data, processing_stack,
+                    K_THREAD_STACK_SIZEOF(processing_stack),
+                    processing_thread, NULL, NULL, NULL,
+                    PROCESSING_PRIORITY, 0, K_NO_WAIT);
+
+    printk("Sensor system initialized\n");
+    return 0;
+}
+```
+
+## WiFi and Network Integration
+
+### WiFi Manager Implementation
+
+```c
+// src/wifi_manager.c
+#include <zephyr/kernel.h>
+#include <zephyr/net/net_if.h>
+#include <zephyr/net/wifi_mgmt.h>
+#include <zephyr/net/net_event.h>
+#include <zephyr/sys/printk.h>
+
+/* WiFi credentials */
+#define WIFI_SSID "YourWiFiNetwork"
+#define WIFI_PSK "YourPassword"
+
+/* Network events */
+static struct net_mgmt_event_callback mgmt_cb;
+static struct net_mgmt_event_callback wifi_cb;
+
+/* Connection status */
+static bool connected = false;
+static K_SEM_DEFINE(wifi_connected, 0, 1);
+
+static void wifi_mgmt_event_handler(struct net_mgmt_event_callback *cb,
+                                   uint32_t mgmt_event,
+                                   struct net_if *iface)
+{
+    switch (mgmt_event) {
+    case NET_EVENT_WIFI_CONNECT_RESULT:
+        printk("WiFi: Connected to network\n");
+        connected = true;
+        k_sem_give(&wifi_connected);
+        break;
+        
+    case NET_EVENT_WIFI_DISCONNECT_RESULT:
+        printk("WiFi: Disconnected from network\n");
+        connected = false;
+        break;
+        
+    default:
+        break;
+    }
+}
+
+static void net_mgmt_event_handler(struct net_mgmt_event_callback *cb,
+                                  uint32_t mgmt_event,
+                                  struct net_if *iface)
+{
+    switch (mgmt_event) {
+    case NET_EVENT_IPV4_ADDR_ADD:
+        printk("Network: IPv4 address assigned\n");
+        
+        /* Print IP address */
+        char buf[NET_IPV4_ADDR_LEN];
+        struct net_if_addr *addr = &iface->config.ip.ipv4->unicast[0];
+        
+        net_addr_ntop(AF_INET, &addr->address.in_addr, buf, sizeof(buf));
+        printk("IP Address: %s\n", buf);
+        break;
+        
+    default:
+        break;
+    }
+}
+
+int wifi_manager_init(void)
+{
+    struct net_if *iface;
+    struct wifi_connect_req_params params;
+    int ret;
+
+    /* Get default network interface */
+    iface = net_if_get_default();
+    if (!iface) {
+        printk("WiFi: No default network interface found\n");
+        return -ENODEV;
+    }
+
+    /* Register event callbacks */
+    net_mgmt_init_event_callback(&wifi_cb, wifi_mgmt_event_handler,
+                                NET_EVENT_WIFI_CONNECT_RESULT |
+                                NET_EVENT_WIFI_DISCONNECT_RESULT);
+    
+    net_mgmt_init_event_callback(&mgmt_cb, net_mgmt_event_handler,
+                                NET_EVENT_IPV4_ADDR_ADD);
+
+    net_mgmt_add_event_callback(&wifi_cb);
+    net_mgmt_add_event_callback(&mgmt_cb);
+
+    /* Configure WiFi connection parameters */
+    memset(&params, 0, sizeof(params));
+    params.ssid = WIFI_SSID;
+    params.ssid_length = strlen(WIFI_SSID);
+    params.psk = WIFI_PSK;
+    params.psk_length = strlen(WIFI_PSK);
+    params.channel = WIFI_CHANNEL_ANY;
+    params.security = WIFI_SECURITY_TYPE_PSK;
+
+    printk("WiFi: Connecting to %s...\n", WIFI_SSID);
+    
+    /* Connect to WiFi */
+    ret = net_mgmt(NET_REQUEST_WIFI_CONNECT, iface, &params, sizeof(params));
+    if (ret < 0) {
+        printk("WiFi: Connection request failed: %d\n", ret);
+        return ret;
+    }
+
+    /* Wait for connection */
+    ret = k_sem_take(&wifi_connected, K_SECONDS(30));
+    if (ret < 0) {
+        printk("WiFi: Connection timeout\n");
+        return -ETIMEDOUT;
+    }
+
+    printk("WiFi: Successfully connected and configured\n");
+    return 0;
+}
+
+bool wifi_is_connected(void)
+{
+    return connected;
+}
+```
+
+## MQTT IoT Integration
+
+### MQTT Client Implementation
+
+```c
+// src/mqtt_client.c
+#include <zephyr/kernel.h>
+#include <zephyr/net/mqtt.h>
+#include <zephyr/net/socket.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/random/rand32.h>
+
+/* MQTT Configuration */
+#define MQTT_BROKER_ADDR "mqtt.broker.address"
+#define MQTT_BROKER_PORT 1883
+#define MQTT_CLIENT_ID "zephyr-esp32-client"
+#define MQTT_TOPIC_SENSORS "sensors/esp32/data"
+#define MQTT_TOPIC_STATUS "sensors/esp32/status"
+
+/* MQTT buffers */
+#define MQTT_RX_BUFFER_SIZE 1024
+#define MQTT_TX_BUFFER_SIZE 1024
+
+static uint8_t rx_buffer[MQTT_RX_BUFFER_SIZE];
+static uint8_t tx_buffer[MQTT_TX_BUFFER_SIZE];
+static uint8_t payload_buffer[512];
+
+/* MQTT client instance */
+static struct mqtt_client client;
+static struct sockaddr_in broker_addr;
+static bool mqtt_connected = false;
+
+/* Thread for MQTT processing */
+#define MQTT_THREAD_STACK_SIZE 4096
+#define MQTT_THREAD_PRIORITY 7
+
+K_THREAD_STACK_DEFINE(mqtt_stack, MQTT_THREAD_STACK_SIZE);
+struct k_thread mqtt_thread_data;
+
+static void mqtt_evt_handler(struct mqtt_client *const client,
+                             const struct mqtt_evt *evt)
+{
+    switch (evt->type) {
+    case MQTT_EVT_CONNACK:
+        if (evt->result == 0) {
+            printk("MQTT: Connected to broker\n");
+            mqtt_connected = true;
+            
+            /* Publish online status */
+            mqtt_publish_status("online");
+        } else {
+            printk("MQTT: Connection failed: %d\n", evt->result);
+            mqtt_connected = false;
+        }
+        break;
+
+    case MQTT_EVT_DISCONNECT:
+        printk("MQTT: Disconnected\n");
+        mqtt_connected = false;
+        break;
+
+    case MQTT_EVT_PUBLISH:
+        printk("MQTT: Message published\n");
+        break;
+
+    case MQTT_EVT_PUBACK:
+        printk("MQTT: PUBACK received\n");
+        break;
+
+    default:
+        printk("MQTT: Unhandled event type: %d\n", evt->type);
+        break;
+    }
+}
+
+static int mqtt_broker_init(void)
+{
+    struct sockaddr_in *broker4 = (struct sockaddr_in *)&broker_addr;
+
+    broker4->sin_family = AF_INET;
+    broker4->sin_port = htons(MQTT_BROKER_PORT);
+    
+    /* Convert IP address */
+    if (inet_pton(AF_INET, MQTT_BROKER_ADDR, &broker4->sin_addr) <= 0) {
+        printk("MQTT: Invalid broker address\n");
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
+static int mqtt_client_init(void)
+{
+    int ret;
+
+    mqtt_client_init(&client);
+
+    /* Configure MQTT client */
+    client.broker = &broker_addr;
+    client.evt_cb = mqtt_evt_handler;
+    client.client_id.utf8 = MQTT_CLIENT_ID;
+    client.client_id.size = strlen(MQTT_CLIENT_ID);
+    client.password = NULL;
+    client.user_name = NULL;
+    client.protocol_version = MQTT_VERSION_3_1_1;
+
+    /* Configure buffers */
+    client.rx_buf = rx_buffer;
+    client.rx_buf_size = sizeof(rx_buffer);
+    client.tx_buf = tx_buffer;
+    client.tx_buf_size = sizeof(tx_buffer);
+
+    /* Connect to broker */
+    ret = mqtt_connect(&client);
+    if (ret < 0) {
+        printk("MQTT: Connection failed: %d\n", ret);
+        return ret;
+    }
+
+    printk("MQTT: Connecting to broker...\n");
+    return 0;
+}
+
+void mqtt_thread(void *arg1, void *arg2, void *arg3)
+{
+    int ret;
+    struct pollfd fds[1];
+
+    printk("MQTT thread started\n");
+
+    /* Initialize broker and client */
+    if (mqtt_broker_init() < 0) {
+        return;
+    }
+
+    if (mqtt_client_init() < 0) {
+        return;
+    }
+
+    fds[0].fd = client.transport.tcp.sock;
+    fds[0].events = POLLIN;
+
+    while (1) {
+        /* Poll for MQTT events */
+        ret = poll(fds, 1, K_MSEC(1000));
+        if (ret > 0) {
+            if (fds[0].revents & POLLIN) {
+                mqtt_input(&client);
+            }
+        }
+
+        /* Keep connection alive */
+        mqtt_live(&client);
+
+        /* Reconnect if disconnected */
+        if (!mqtt_connected) {
+            printk("MQTT: Attempting to reconnect...\n");
+            mqtt_client_init();
+            k_sleep(K_SECONDS(5));
+        }
+
+        k_sleep(K_MSEC(100));
+    }
+}
+
+int mqtt_publish_sensor_data(int32_t temperature, int32_t humidity, int32_t pressure)
+{
+    struct mqtt_publish_param param;
+    int ret;
+
+    if (!mqtt_connected) {
+        return -ENOTCONN;
+    }
+
+    /* Create JSON payload */
+    ret = snprintf(payload_buffer, sizeof(payload_buffer),
+                   "{"
+                   "\"device_id\":\"%s\","
+                   "\"timestamp\":%lld,"
+                   "\"temperature\":%.1f,"
+                   "\"humidity\":%.1f,"
+                   "\"pressure\":%d"
+                   "}",
+                   MQTT_CLIENT_ID,
+                   k_uptime_get(),
+                   temperature / 10.0,
+                   humidity / 10.0,
+                   pressure);
+
+    if (ret >= sizeof(payload_buffer)) {
+        printk("MQTT: Payload buffer too small\n");
+        return -ENOMEM;
+    }
+
+    /* Configure publish parameters */
+    param.message.topic.qos = MQTT_QOS_1_AT_LEAST_ONCE;
+    param.message.topic.topic.utf8 = MQTT_TOPIC_SENSORS;
+    param.message.topic.topic.size = strlen(MQTT_TOPIC_SENSORS);
+    param.message.payload.data = payload_buffer;
+    param.message.payload.len = ret;
+    param.message_id = sys_rand32_get();
+    param.dup_flag = 0;
+    param.retain_flag = 0;
+
+    /* Publish message */
+    ret = mqtt_publish(&client, &param);
+    if (ret < 0) {
+        printk("MQTT: Publish failed: %d\n", ret);
+        return ret;
+    }
+
+    printk("MQTT: Sensor data published\n");
+    return 0;
+}
+
+int mqtt_publish_status(const char *status)
+{
+    struct mqtt_publish_param param;
+    int ret;
+
+    if (!mqtt_connected) {
+        return -ENOTCONN;
+    }
+
+    /* Configure publish parameters */
+    param.message.topic.qos = MQTT_QOS_1_AT_LEAST_ONCE;
+    param.message.topic.topic.utf8 = MQTT_TOPIC_STATUS;
+    param.message.topic.topic.size = strlen(MQTT_TOPIC_STATUS);
+    param.message.payload.data = status;
+    param.message.payload.len = strlen(status);
+    param.message_id = sys_rand32_get();
+    param.dup_flag = 0;
+    param.retain_flag = 1; // Retain status messages
+
+    /* Publish message */
+    ret = mqtt_publish(&client, &param);
+    if (ret < 0) {
+        printk("MQTT: Status publish failed: %d\n", ret);
+        return ret;
+    }
+
+    printk("MQTT: Status '%s' published\n", status);
+    return 0;
+}
+
+int mqtt_client_start(void)
+{
+    /* Create MQTT processing thread */
+    k_thread_create(&mqtt_thread_data, mqtt_stack,
+                    K_THREAD_STACK_SIZEOF(mqtt_stack),
+                    mqtt_thread, NULL, NULL, NULL,
+                    MQTT_THREAD_PRIORITY, 0, K_NO_WAIT);
+
+    printk("MQTT client started\n");
+    return 0;
+}
+
+bool mqtt_is_connected(void)
+{
+    return mqtt_connected;
+}
+```
+
+## Building and Flashing
+
+### Build Configuration
+
+Update your **prj.conf** for the complete application:
+
+```ini
+# Basic kernel configuration
+CONFIG_MAIN_STACK_SIZE=4096
+CONFIG_HEAP_MEM_POOL_SIZE=32768
+CONFIG_MULTITHREADING=y
+CONFIG_NUM_PREEMPT_PRIORITIES=15
+
+# Console and logging
+CONFIG_CONSOLE=y
+CONFIG_UART_CONSOLE=y
+CONFIG_SERIAL=y
+CONFIG_LOG=y
+CONFIG_LOG_DEFAULT_LEVEL=3
+
+# GPIO for LEDs
+CONFIG_GPIO=y
+
+# Networking
+CONFIG_NETWORKING=y
+CONFIG_NET_IPV4=y
+CONFIG_NET_IPV6=n
+CONFIG_NET_TCP=y
+CONFIG_NET_UDP=y
+CONFIG_NET_SOCKETS=y
+CONFIG_NET_SOCKETS_POLL_MAX=4
+
+# WiFi
+CONFIG_WIFI=y
+CONFIG_ESP32_WIFI_STA_AUTO_DHCPV4=y
+
+# MQTT
+CONFIG_MQTT_LIB=y
+CONFIG_MQTT_LIB_TLS=n
+
+# DNS resolver
+CONFIG_DNS_RESOLVER=y
+
+# Random number generator
+CONFIG_ENTROPY_GENERATOR=y
+CONFIG_TEST_RANDOM_GENERATOR=y
+
+# Memory management
+CONFIG_NET_BUF_RX_COUNT=16
+CONFIG_NET_BUF_TX_COUNT=16
+CONFIG_NET_PKT_RX_COUNT=16
+CONFIG_NET_PKT_TX_COUNT=16
+
+# ESP32 specific
+CONFIG_ESP32_WIFI_STACK_WPA_SUPPLICANT=y
+CONFIG_ESP_SPIRAM=y
+```
+
+### Build Commands
+
+```bash
+# Navigate to your project directory
+cd zephyr-esp32-workspace/zephyr-rtos
+
+# Build for ESP32
+west build -b esp32 path/to/your/app
+
+# Flash to ESP32
+west flash
+
+# Open serial monitor
+west build -t monitor
+```
+
+### Custom Board Configuration
+
+Create **boards/esp32_custom.overlay** for custom pin assignments:
+
+```dts
+/ {
+    aliases {
+        led0 = &led0;
+        sw0 = &button0;
+    };
+
+    leds {
+        compatible = "gpio-leds";
+        led0: led_0 {
+            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+            label = "User LED";
+        };
+    };
+
+    buttons {
+        compatible = "gpio-keys";
+        button0: button_0 {
+            gpios = <&gpio0 0 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+            label = "User Button";
+        };
+    };
+};
+
+&pinctrl {
+    uart0_default: uart0_default {
+        group1 {
+            pinmux = <UART0_TX_GPIO1>;
+            output-high;
+        };
+        group2 {
+            pinmux = <UART0_RX_GPIO3>;
+            bias-pull-up;
+        };
+    };
+};
+
+&uart0 {
+    status = "okay";
+    current-speed = <115200>;
+    pinctrl-0 = <&uart0_default>;
+    pinctrl-names = "default";
+};
+```
+
+## Advanced Power Management
+
+### Power Management Implementation
+
+```c
+// src/power_manager.c
+#include <zephyr/kernel.h>
+#include <zephyr/pm/pm.h>
+#include <zephyr/pm/state.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/printk.h>
+
+/* Power management configuration */
+#define SLEEP_TIMEOUT_MS 30000  // 30 seconds of inactivity
+#define WAKE_UP_INTERVAL_MS 60000 // Wake up every minute
+
+/* Power states */
+static bool low_power_mode = false;
+static int64_t last_activity_time;
+
+/* Wake up sources */
+#define WAKEUP_BUTTON_NODE DT_ALIAS(sw0)
+#define WAKEUP_BUTTON_PORT DEVICE_DT_GET(DT_GPIO_CTLR(WAKEUP_BUTTON_NODE, gpios))
+#define WAKEUP_BUTTON_PIN DT_GPIO_PIN(WAKEUP_BUTTON_NODE, gpios)
+#define WAKEUP_BUTTON_FLAGS DT_GPIO_FLAGS(WAKEUP_BUTTON_NODE, gpios)
+
+static struct gpio_callback button_cb_data;
+
+void button_pressed_callback(const struct device *dev, 
+                           struct gpio_callback *cb, 
+                           uint32_t pins)
+{
+    printk("Power: Wake up button pressed\n");
+    last_activity_time = k_uptime_get();
+    low_power_mode = false;
+}
+
+int power_manager_init(void)
+{
+    const struct device *button_dev = WAKEUP_BUTTON_PORT;
+    int ret;
+
+    if (!device_is_ready(button_dev)) {
+        printk("Power: Button device not ready\n");
+        return -ENODEV;
+    }
+
+    /* Configure wake up button */
+    ret = gpio_pin_configure(button_dev, WAKEUP_BUTTON_PIN, 
+                           GPIO_INPUT | WAKEUP_BUTTON_FLAGS);
+    if (ret < 0) {
+        printk("Power: Cannot configure button pin\n");
+        return ret;
+    }
+
+    /* Configure interrupt */
+    ret = gpio_pin_interrupt_configure(button_dev, WAKEUP_BUTTON_PIN, 
+                                     GPIO_INT_EDGE_TO_ACTIVE);
+    if (ret < 0) {
+        printk("Power: Cannot configure button interrupt\n");
+        return ret;
+    }
+
+    /* Setup callback */
+    gpio_init_callback(&button_cb_data, button_pressed_callback, 
+                      BIT(WAKEUP_BUTTON_PIN));
+    gpio_add_callback(button_dev, &button_cb_data);
+
+    last_activity_time = k_uptime_get();
+    
+    printk("Power: Manager initialized\n");
+    return 0;
+}
+
+void power_manager_update_activity(void)
+{
+    last_activity_time = k_uptime_get();
+    if (low_power_mode) {
+        printk("Power: Resuming from low power mode\n");
+        low_power_mode = false;
+    }
+}
+
+bool power_manager_should_sleep(void)
+{
+    int64_t inactive_time = k_uptime_get() - last_activity_time;
+    return (inactive_time > SLEEP_TIMEOUT_MS);
+}
+
+int power_manager_enter_sleep(void)
+{
+    printk("Power: Entering low power mode\n");
+    low_power_mode = true;
+
+    /* Configure wake up timer */
+    // Implementation depends on ESP32 power management APIs
+    
+    /* Enter sleep state */
+    pm_state_force(0u, &(struct pm_state_info){PM_STATE_SUSPEND_TO_IDLE, 0, 0});
+    
+    return 0;
+}
+```
+
+## Complete Main Application Integration
+
+```c
+// src/main.c - Complete integration
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/printk.h>
+
+/* Function declarations from other modules */
+extern int sensor_system_init(void);
+extern int wifi_manager_init(void);
+extern int mqtt_client_start(void);
+extern int power_manager_init(void);
+extern bool wifi_is_connected(void);
+extern bool mqtt_is_connected(void);
+extern int mqtt_publish_sensor_data(int32_t temp, int32_t humidity, int32_t pressure);
+extern void power_manager_update_activity(void);
+extern bool power_manager_should_sleep(void);
+extern int power_manager_enter_sleep(void);
+
+/* Application main thread */
+#define MAIN_THREAD_STACK_SIZE 4096
+#define MAIN_THREAD_PRIORITY 5
+
+void system_monitor_thread(void *arg1, void *arg2, void *arg3)
+{
+    uint32_t cycle_count = 0;
+    
+    printk("System monitor started\n");
+
+    while (1) {
+        cycle_count++;
+        
+        /* Print system status every 30 seconds */
+        if (cycle_count % 6 == 0) {
+            printk("=== System Status ===\n");
+            printk("Uptime: %lld ms\n", k_uptime_get());
+            printk("WiFi: %s\n", wifi_is_connected() ? "Connected" : "Disconnected");
+            printk("MQTT: %s\n", mqtt_is_connected() ? "Connected" : "Disconnected");
+            printk("Cycle: %u\n", cycle_count);
+            printk("====================\n");
+            
+            /* Update activity timestamp */
+            power_manager_update_activity();
+        }
+
+        /* Check for power management */
+        if (power_manager_should_sleep()) {
+            printk("System: Entering sleep mode due to inactivity\n");
+            power_manager_enter_sleep();
+        }
+
+        /* Sleep for 5 seconds */
+        k_sleep(K_SECONDS(5));
+    }
+}
+
+int main(void)
+{
+    int ret;
+
+    printk("\n=== Zephyr RTOS on ESP32 - Complete IoT Application ===\n");
+    printk("Kernel Version: %s\n", KERNEL_VERSION_STRING);
+    printk("Build Time: %s %s\n", __DATE__, __TIME__);
+
+    /* Initialize power management first */
+    ret = power_manager_init();
+    if (ret < 0) {
+        printk("Power manager initialization failed: %d\n", ret);
+        return ret;
+    }
+
+    /* Initialize sensor system */
+    ret = sensor_system_init();
+    if (ret < 0) {
+        printk("Sensor system initialization failed: %d\n", ret);
+        return ret;
+    }
+
+    /* Initialize WiFi */
+    printk("Initializing WiFi connection...\n");
+    ret = wifi_manager_init();
+    if (ret < 0) {
+        printk("WiFi initialization failed: %d\n", ret);
+        // Continue without network features
+    }
+
+    /* Initialize MQTT client if WiFi is available */
+    if (wifi_is_connected()) {
+        printk("Starting MQTT client...\n");
+        ret = mqtt_client_start();
+        if (ret < 0) {
+            printk("MQTT client initialization failed: %d\n", ret);
+        }
+    }
+
+    /* Start system monitoring */
+    k_thread_create(&system_monitor_thread_data, system_monitor_stack,
+                    K_THREAD_STACK_SIZEOF(system_monitor_stack),
+                    system_monitor_thread, NULL, NULL, NULL,
+                    MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+
+    printk("=== All systems initialized successfully ===\n\n");
+
+    /* Main loop for general system tasks */
+    while (1) {
+        /* Perform any main thread specific tasks */
+        k_sleep(K_SECONDS(10));
+    }
+
+    return 0;
+}
+```
+
+## Troubleshooting and Best Practices
+
+### Common Issues and Solutions
+
+**Memory Issues:**
+```bash
+# Check memory usage
+west build -t ram_report
+west build -t rom_report
+
+# Optimize memory in prj.conf
+CONFIG_HEAP_MEM_POOL_SIZE=16384
+CONFIG_MAIN_STACK_SIZE=2048
+CONFIG_NET_BUF_RX_COUNT=8
+CONFIG_NET_BUF_TX_COUNT=8
+```
+
+**WiFi Connection Problems:**
+```c
+// Add retry mechanism
+static int wifi_connect_with_retry(int max_retries)
+{
+    int ret;
+    
+    for (int i = 0; i < max_retries; i++) {
+        ret = wifi_manager_init();
+        if (ret == 0) {
+            return 0;
+        }
+        
+        printk("WiFi: Retry %d/%d after %d seconds\n", i+1, max_retries, 5);
+        k_sleep(K_SECONDS(5));
+    }
+    
+    return -ETIMEDOUT;
+}
+```
+
+**Thread Debugging:**
+```c
+// Add thread monitoring
+void debug_print_threads(void)
+{
+    struct k_thread *thread;
+    
+    printk("=== Thread Status ===\n");
+    
+    // This requires CONFIG_THREAD_MONITOR=y in prj.conf
+    SYS_SLIST_FOR_EACH_CONTAINER(&k_thread_monitor_list, thread, monitor_node) {
+        printk("Thread: %p, Stack: %zu bytes\n", 
+               thread, thread->stack_info.size);
+    }
+}
+```
+
+### Performance Optimization
+
+**Compiler Optimizations in CMakeLists.txt:**
+```cmake
+# Enable optimizations
+target_compile_options(app PRIVATE -O2 -flto)
+
+# ESP32 specific optimizations
+target_compile_options(app PRIVATE -mtext-section-literals)
+
+# Debugging options for development
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(app PRIVATE -g -O0)
+endif()
+```
+
+This comprehensive guide covers the essential aspects of developing real-time applications with Zephyr RTOS on ESP32, from basic setup to advanced IoT integration with threading, networking, and power management.

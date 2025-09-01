@@ -1,0 +1,384 @@
+---
+title: "Visual Studio Code Extensions: Potencia tu Desarrollo"
+date: 2024-08-01
+description: "Descubre las mejores extensiones de VS Code para desarrollo web, embedded systems y productividad. Incluye configuraciones y tips avanzados."
+author: "Jesus Velez"
+tags: ["vscode", "extensions", "productivity", "web-development", "embedded"]
+---
+
+# Visual Studio Code Extensions: Potencia tu Desarrollo
+
+Visual Studio Code se ha convertido en el editor favorito de millones de desarrolladores. Su poder real viene de su extenso ecosistema de extensiones. Te comparto mis extensiones esenciales organizadas por categorías.
+
+## 🎨 Tema y Apariencia
+
+### Material Theme
+**ID**: `Equinusocio.vsc-material-theme`
+
+```json
+{
+  "workbench.colorTheme": "Material Theme Darker High Contrast",
+  "workbench.iconTheme": "material-icon-theme"
+}
+```
+
+### Bracket Pair Colorizer 2
+Colorea los brackets para mejor legibilidad:
+
+```json
+{
+  "bracket-pair-colorizer-2.colors": [
+    "#ffd700",
+    "#da70d6", 
+    "#87ceeb"
+  ]
+}
+```
+
+## 🚀 Productividad Esencial
+
+### 1. Auto Rename Tag
+**ID**: `formulahendry.auto-rename-tag`
+
+Renombra automáticamente las etiquetas HTML/XML emparejadas:
+
+```html
+<!-- Cambiar <div> automáticamente cambia </div> -->
+<div class="container">
+  <p>Contenido</p>
+</div>
+```
+
+### 2. Thunder Client
+**ID**: `rangav.vscode-thunder-client`
+
+Cliente REST integrado en VS Code. Perfecto para testing de APIs:
+
+```json
+// thunder-tests/test.json
+{
+  "name": "Get Users",
+  "method": "GET",
+  "endpoint": "https://api.example.com/users",
+  "headers": {
+    "Authorization": "Bearer {{token}}"
+  }
+}
+```
+
+### 3. GitLens
+**ID**: `eamodio.gitlens`
+
+Superpoderes para Git integrado:
+
+```json
+{
+  "gitlens.currentLine.enabled": false,
+  "gitlens.hovers.currentLine.over": "line",
+  "gitlens.blame.format": "${author}, ${agoOrDate}"
+}
+```
+
+## 💻 Desarrollo Web
+
+### 1. Live Server
+**ID**: `ritwickdey.LiveServer`
+
+Servidor local con hot reload:
+
+```json
+{
+  "liveServer.settings.port": 3000,
+  "liveServer.settings.CustomBrowser": "chrome",
+  "liveServer.settings.donotShowInfoMsg": true
+}
+```
+
+### 2. ES7+ React/Redux/React-Native snippets
+**ID**: `dsznajder.es7-react-js-snippets`
+
+Snippets esenciales para React:
+
+```javascript
+// rafce → React Arrow Function Component with Export
+import React from 'react'
+
+const ComponentName = () => {
+  return (
+    <div>ComponentName</div>
+  )
+}
+
+export default ComponentName
+
+// useState → useState Hook
+const [state, setState] = useState(initialState)
+```
+
+### 3. Tailwind CSS IntelliSense
+**ID**: `bradlc.vscode-tailwindcss`
+
+Autocompletado inteligente para Tailwind:
+
+```html
+<!-- Autocompletado para clases Tailwind -->
+<div class="flex items-center justify-between p-4 bg-blue-500 text-white rounded-lg shadow-lg">
+  <h1 class="text-2xl font-bold">Title</h1>
+</div>
+```
+
+### 4. Astro
+**ID**: `astro-build.astro-vscode`
+
+Soporte completo para Astro framework:
+
+```astro
+---
+// src/components/Card.astro
+export interface Props {
+  title: string;
+  body: string;
+  href: string;
+}
+
+const { href, title, body } = Astro.props;
+---
+
+<li class="link-card">
+  <a href={href}>
+    <h2>{title}</h2>
+    <p>{body}</p>
+  </a>
+</li>
+```
+
+## ⚡ TypeScript y JavaScript
+
+### 1. TypeScript Importer
+**ID**: `pmneo.tsimporter`
+
+Auto-importación inteligente:
+
+```typescript
+// Importa automáticamente al usar
+import { UserService } from './services/UserService';
+
+class UserController {
+  constructor(private userService: UserService) {}
+}
+```
+
+### 2. JavaScript (ES6) code snippets
+**ID**: `xabikos.JavaScriptSnippets`
+
+Snippets modernos de JavaScript:
+
+```javascript
+// clg → console.log
+console.log('object')
+
+// fre → forEach
+array.forEach(element => {
+  
+});
+
+// prom → Promise
+return new Promise((resolve, reject) => {
+  
+});
+```
+
+## 🔧 Sistemas Embebidos
+
+### 1. PlatformIO IDE
+**ID**: `platformio.platformio-ide`
+
+IDE completo para desarrollo embebido:
+
+```ini
+; platformio.ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+monitor_speed = 115200
+lib_deps = 
+    bblanchon/ArduinoJson@^6.19.4
+    adafruit/DHT sensor library@^1.4.4
+```
+
+### 2. C/C++ Extension Pack
+**ID**: `ms-vscode.cpptools-extension-pack`
+
+Incluye:
+- C/C++ IntelliSense
+- C/C++ Themes
+- CMake Tools
+- Remote Development
+
+```cpp
+// main.cpp con IntelliSense completo
+#include <Arduino.h>
+#include <WiFi.h>
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin("SSID", "PASSWORD");
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+}
+
+void loop() {
+  // Tu código aquí
+}
+```
+
+### 3. Serial Monitor
+**ID**: `ms-vscode.vscode-serial-monitor`
+
+Monitor serie integrado para debugging:
+
+```json
+{
+  "serialMonitor.defaultBaudRate": 115200,
+  "serialMonitor.defaultPort": "/dev/ttyUSB0"
+}
+```
+
+## 🛠️ Utilidades y Formateo
+
+### 1. Prettier - Code Formatter
+**ID**: `esbenp.prettier-vscode`
+
+Formateo consistente de código:
+
+```json
+// .prettierrc
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+
+### 2. ESLint
+**ID**: `ms-vscode.vscode-eslint`
+
+Linting para JavaScript/TypeScript:
+
+```json
+// .eslintrc.json
+{
+  "extends": ["@astro/eslint-config"],
+  "rules": {
+    "no-console": "warn",
+    "no-unused-vars": "error"
+  }
+}
+```
+
+### 3. Error Lens
+**ID**: `usernamehw.errorlens`
+
+Muestra errores inline:
+
+```javascript
+// Error mostrado directamente en la línea
+const user = undefined;
+console.log(user.name); // ← Cannot read properties of undefined
+```
+
+## 📝 Documentación y Markdown
+
+### 1. Markdown All in One
+**ID**: `yzhang.markdown-all-in-one`
+
+Suite completa para Markdown:
+
+```markdown
+# Título 1
+## Título 2
+
+- [ ] Tarea pendiente
+- [x] Tarea completada
+
+``javascript
+const code = 'syntax highlighting';
+``
+
+[Link](https://example.com)
+```
+
+### 2. markdownlint
+**ID**: `DavidAnson.vscode-markdownlint`
+
+Linting para archivos Markdown:
+
+```json
+// .markdownlint.json
+{
+  "MD013": false,
+  "MD033": {
+    "allowed_elements": ["details", "summary"]
+  }
+}
+```
+
+## 🎯 Configuración Avanzada
+
+### Settings.json Optimizado
+
+```json
+{
+  // Editor
+  "editor.fontSize": 14,
+  "editor.fontFamily": "'Fira Code', 'Cascadia Code', monospace",
+  "editor.fontLigatures": true,
+  "editor.lineHeight": 1.6,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.wordWrap": "on",
+  "editor.minimap.enabled": false,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.organizeImports": true
+  },
+
+  // Workbench
+  "workbench.startupEditor": "newUntitledFile",
+  "workbench.editor.enablePreview": false,
+  "workbench.colorTheme": "Material Theme Darker High Contrast",
+  "workbench.iconTheme": "material-icon-theme",
+
+  // Files
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true
+  },
+
+  // Terminal
+  "terminal.integrated.fontSize": 13,
+  "terminal.integrated.fontFamily": "'Fira Code', monospace",
+
+  // Extensión específica
+  "emmet.includeLanguages": {
+    "astro": "html"
+  },
+  "tailwindCSS.includeLanguages": {
+    "astro": "html"
+  }
+}
+```
+
+¿Cuáles son tus extensiones favoritas? ¡Compártelas en los comentarios!
