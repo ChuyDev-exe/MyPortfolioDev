@@ -1,3 +1,7 @@
-h1, h2 {
-    color: white;
+@import "tailwindcss";
+
+h1, h2, p, span, li, ol{
+    @apply text-amber-50 text-justify py-2;
 }
+
+

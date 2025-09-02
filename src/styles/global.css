@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-
 @theme {
     /* Define your animation property */
     --animate-fade-up: fadeUp 0.8s ease-out;

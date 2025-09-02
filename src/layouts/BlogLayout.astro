@@ -1,10 +1,12 @@
 ---
+import "../styles/global.css";
+import "../styles/blog.css";
+import "@fontsource-variable/onest";
+
 interface Props {
 	title: string;
 }
 const { title } = Astro.props;
-import "../styles/global.css";
-import "@fontsource-variable/onest";
 ---
 
 <!doctype html>
@@ -43,4 +45,7 @@ import "@fontsource-variable/onest";
 			scroll-behavior: auto;
 		}
 	}
+
+	/* Bloques de código */
+
 </style>
