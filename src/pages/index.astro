@@ -15,7 +15,7 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 		<>
 			<nav
 				id="navbar"
-				class="flex flex-row sm:flex-row max-sm:flex-col  gap-4 justify-center items-center mt-24 mb-16 z-50 transition-all duration-300 bg-transparent sticky top-10 backdrop-blur-sm border border-white rounded-xl sm:rounded-full py-2 px-6 px-10 w-auto"
+				class="flex flex-row sm:flex-row max-sm:flex-col  gap-4 justify-center items-center mt-24 mb-16 z-50 transition-all duration-300 bg-transparent sticky top-10 backdrop-blur-sm border border-white rounded-xl sm:rounded-full py-2 px-6 px-10 w-auto mx-auto"
 			>
 				<NavItem title="Experience" href="#Experiencia" />
 				<NavItem title="Projects" href="#Projects" />
@@ -52,30 +52,30 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 			</section>
 
 			<div
-				class="w-full flex items-center justify-center flex-col mt-[100px]"
+				class="w-full flex items-center justify-center flex-col mt-[100px]  "
 				id="Experiencia"
 			>
-				<h1 class="text-5xl font-semibold text-white my-5">
+				<h1 class="max-sm:text-2xl text-5xl font-semibold text-white my-5">
 					Experiencia
 				</h1>
 				<Experience />
 			</div>
 
 			<div
-				class="w-full flex items-center justify-center flex-col mt-[200px]"
+				class="w-full flex items-center justify-center flex-col mt-[200px] "
 				id="Skills"
 			>
-				<h1 class="text-5xl font-semibold text-white my-5">
+				<h1 class="max-sm:text-2xl text-5xl font-semibold text-white my-5">
 					Skills
 				</h1>
 				<TabsComponent client:load/>
 			</div>
 
 			<div
-				class="w-full flex items-center justify-center flex-col mt-[200px]"
+				class="w-[100%] flex items-center justify-center flex-col mt-[200px] "
 				id="Projects"
 			>
-				<h1 class="text-5xl font-semibold text-white my-5">
+				<h1 class="max-sm:text-2xl text-5xl font-semibold text-white my-5">
 					Proyectos
 				</h1>
 				<Proyects />

@@ -239,9 +239,7 @@ export default function TabsComponent() {
                 key={tab.id}
                 type="button"
                 onClick={(e) => {
-                  e.preventDefault();
                   e.stopPropagation();
-                  console.log('Button clicked for tab:', tab.id);
                   handleTabClick(tab.id);
                 }}
                 className={`pb-2 sm:pb-3 md:pb-4 px-3 sm:px-4 md:px-5 lg:px-6 relative transition-colors duration-200 font-medium text-sm sm:text-base md:text-lg whitespace-nowrap flex-shrink-0 cursor-pointer select-none ${
