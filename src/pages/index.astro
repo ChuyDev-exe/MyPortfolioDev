@@ -13,10 +13,13 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 <Layout title="Jesus Velez Soto">
 	{subdomain === '' && (
 		<>
-			<nav id="navbar" class="flex gap-7 flex-row justify-center mt-12 mb-16 z-100">
+			<nav
+				id="navbar"
+				class="flex flex-row sm:flex-row max-sm:flex-col  gap-4 justify-center items-center mt-24 mb-16 z-50 transition-all duration-300 bg-transparent sticky top-10 backdrop-blur-sm border border-white rounded-xl sm:rounded-full py-2 px-6 px-10 w-auto"
+			>
 				<NavItem title="Experience" href="#Experiencia" />
-				<NavItem title="Projects" href="#Projects"/>
-				<NavItem title="Blog" href="/DevBlog" />
+				<NavItem title="Projects" href="#Projects" />
+				<NavItem title="Blog" href="/DevBlog" /> 
 			</nav>
 
 			<Logo />
@@ -65,7 +68,7 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 				<h1 class="text-5xl font-semibold text-white my-5">
 					Skills
 				</h1>
-				<TabsComponent client:load />
+				<TabsComponent client:load/>
 			</div>
 
 			<div

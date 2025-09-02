@@ -62,42 +62,186 @@ const Proyectos = [
 ]
 ---
 
-<ol class="relative mt-16 sm:w-[75%] max-sm:w-[70%] grid grid-cols-3 gap-12">
-  {
-    Proyectos.map((experience) => (
-      <li class="box">
-        <ProyectItem {...experience} />
-      </li>
-    ))
-  }
-</ol>
+<!-- Projects Grid Container -->
+<section class="w-full max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 mt-16">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-5 lg:gap-6 xl:gap-7">
+    {
+      Proyectos.map((project, index) => (
+        <div class="project-card-wrapper" data-index={index}>
+          <div class="box">
+            <ProyectItem {...project} />
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
 
 <style>
-  .box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 12px;
-  border: 2px solid #0000;
-  border-radius: 12px;
-  background: linear-gradient(#050d15, #050d15) padding-box, linear-gradient(
-        var(--angle),
-        #070707,
-        #51E4B8
-      ) border-box;
-  animation: 5s rotate linear infinite;
-}
-
-@keyframes rotate {
-  to {
-    --angle: 360deg;
+  .project-card-wrapper {
+    width: 100%;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
   }
-}
 
-@property --angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
+  /* Mobile-first approach - Single column with proper spacing */
+  @media (max-width: 639px) {
+    .project-card-wrapper {
+      padding: 0;
+      margin-bottom: 0;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    
+    .box {
+      min-height: 400px;
+      padding: 0;
+      border-radius: 16px;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 300px;
+    }
+  }
 
+  .box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 320px;
+    min-height: 400px;
+    margin: 0 auto;
+
+    padding: 0;
+    border: 2px solid #0000;
+    border-radius: 16px;
+    background: linear-gradient(#050d15, #050d15) padding-box, 
+                linear-gradient(var(--angle), #070707, #51E4B8) border-box;
+    animation: 5s rotate linear infinite;
+    position: relative;
+    overflow: hidden;
+  }
+
+
+
+  @keyframes rotate {
+    to {
+      --angle: 360deg;
+    }
+  }
+
+  @property --angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  /* Responsive adjustments for different screen sizes */
+  @media (max-width: 640px) {
+    .box {
+      min-height: 360px;
+      border-radius: 12px;
+      max-width: 280px;
+    }
+  }
+
+  /* Extra small screens (max-sm) - Better spacing */
+  @media (max-width: 479px) {
+    .project-card-wrapper {
+      padding: 0;
+      margin-bottom: 0;
+      max-width: 260px;
+    }
+    
+    .box {
+      min-height: 380px;
+      border-radius: 14px;
+      max-width: 260px;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 768px) {
+    .box {
+      min-height: 380px;
+      padding: 0;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .box {
+      min-height: 400px;
+      padding: 0;
+    }
+  }
+
+  @media (min-width: 1025px) and (max-width: 1280px) {
+    .box {
+      min-height: 420px;
+      padding: 0;
+    }
+  }
+
+  @media (min-width: 1281px) {
+    .box {
+      min-height: 450px;
+      padding: 0;
+      border-radius: 20px;
+    }
+  }
+
+  /* Animation performance optimization */
+  @media (prefers-reduced-motion: reduce) {
+    .box {
+      animation: none;
+    }
+  }
+
+
+
+  /* Ensure equal height cards in each row */
+  @media (min-width: 768px) {
+    .project-card-wrapper {
+      display: flex;
+      align-items: stretch;
+    }
+    
+    .box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  /* Staggered animation entrance effect - Optimized for mobile */
+  .project-card-wrapper {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+    animation-delay: calc(var(--index) * 0.1s);
+  }
+
+  /* Faster animations on mobile to reduce perceived lag */
+  @media (max-width: 768px) {
+    .project-card-wrapper {
+      animation-duration: 0.4s;
+      animation-delay: calc(var(--index) * 0.05s);
+    }
+  }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Custom CSS for dynamic animation delay */
+  .project-card-wrapper[data-index="0"] { animation-delay: 0s; }
+  .project-card-wrapper[data-index="1"] { animation-delay: 0.1s; }
+  .project-card-wrapper[data-index="2"] { animation-delay: 0.2s; }
+  .project-card-wrapper[data-index="3"] { animation-delay: 0.3s; }
+  .project-card-wrapper[data-index="4"] { animation-delay: 0.4s; }
+  .project-card-wrapper[data-index="5"] { animation-delay: 0.5s; }
+  .project-card-wrapper[data-index="6"] { animation-delay: 0.6s; }
 </style>
