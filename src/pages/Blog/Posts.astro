@@ -3,39 +3,11 @@ import NavItem from "../../components/NavItem.astro";
 import { getCollection } from 'astro:content';
 import BlogLayout from "../../layouts/BlogLayout.astro";
 
-// Get all blog posts
+// Get all blog posts and sort by date (most recent first)
 const allPosts = await getCollection('posts');
 const sortedPosts = allPosts.sort((a, b) => 
   new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
 );
-
-// Group posts by category based on tags
-const categoryMap: Record<string, any[]> = {
-  'Backend & Web': [],
-  'Embedded Systems': [],
-  'Game Development': [],
-  'Development Tools': [],
-  'IoT & Networking': [],
-  'Other': []
-};
-
-sortedPosts.forEach(post => {
-  const tags = post.data.tags || [];
-  
-  if (tags.some((tag: string) => ['.NET', 'Astro', 'NextJS', 'React', 'JavaScript', 'TypeScript', 'WebAssembly'].includes(tag))) {
-    categoryMap['Backend & Web'].push(post);
-  } else if (tags.some((tag: string) => ['ESP32', 'ATtiny85', 'BeagleBone', 'Luckfox', 'RTOS', 'Embedded', 'LVGL'].includes(tag))) {
-    categoryMap['Embedded Systems'].push(post);
-  } else if (tags.some((tag: string) => ['SDL', 'Game Development', 'C++'].includes(tag))) {
-    categoryMap['Game Development'].push(post);
-  } else if (tags.some((tag: string) => ['VS Code', 'Extensions', 'Developer Tools'].includes(tag))) {
-    categoryMap['Development Tools'].push(post);
-  } else if (tags.some((tag: string) => ['IoT', 'Zephyr', 'MQTT', 'WiFi', 'Networking'].includes(tag))) {
-    categoryMap['IoT & Networking'].push(post);
-  } else {
-    categoryMap['Other'].push(post);
-  }
-});
 ---
 
 <BlogLayout title="All Blog Posts">
@@ -51,146 +23,110 @@ sortedPosts.forEach(post => {
         Comprehensive guides covering backend development, embedded systems, game development, 
         and cutting-edge technologies. All articles include practical examples and real-world applications.
       </p>
-      <div class="w-32 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto mt-8"></div>
+      <div class="w-32 h-1 bg-linear-to-r from-blue-500 to-cyan-500 mx-auto mt-8"></div>
     </header>
 
-    <!-- Category Sections -->
-    {Object.entries(categoryMap).map(([category, posts]) => 
-      posts.length > 0 && (
-        <section class="mb-16">
-          <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-            <div class="w-4 h-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
-            {category}
-            <span class="text-sm font-normal text-gray-400 ml-2">({posts.length} articles)</span>
-          </h2>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {posts.map((post) => {
-              const readingTime = Math.ceil((post.body?.length || 0) / 1000) || 5;
-              const publishDate = new Date(post.data.date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              });
+    <!-- All Posts Section -->
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+        <div class="w-4 h-4 bg-linear-to-r from-blue-500 to-cyan-500 rounded-full"></div>
+        All Articles
+        <span class="text-sm font-normal text-gray-400 ml-2">({sortedPosts.length} total)</span>
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {sortedPosts.map((post) => {
+          const readingTime = Math.ceil((post.body?.length || 0) / 1000) || 5;
+          const publishDate = new Date(post.data.date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
 
-              return (
-                <article class="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 hover:transform hover:scale-[1.02] shadow-lg hover:shadow-2xl">
-                  <div class="flex flex-col h-full">
-                    <!-- Tags -->
-                    <div class="flex flex-wrap gap-2 mb-4">
-                      {post.data.tags?.slice(0, 3).map((tag: string) => (
-                        <span class="px-3 py-1 text-xs font-medium bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    <!-- Title -->
-                    <h3 class="text-xl font-bold text-white mb-3 line-clamp-2 flex-grow">
-                      <a href={`/Blog/${post.slug}`} class="hover:text-blue-400 transition-colors">
-                        {post.data.title}
-                      </a>
-                    </h3>
-                    
-                    <!-- Description -->
-                    <p class="text-gray-300 text-sm mb-6 line-clamp-3 leading-relaxed flex-grow">
-                      {post.data.description}
-                    </p>
-                    
-                    <!-- Metadata -->
-                    <div class="flex items-center justify-between text-xs text-gray-400 mb-6">
-                      <div class="flex items-center gap-4">
-                        <span class="flex items-center gap-1">
-                          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                          </svg>
-                          {publishDate}
-                        </span>
-                        
-                        <span class="flex items-center gap-1">
-                          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                          </svg>
-                          {readingTime} min read
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <!-- Read More Button -->
-                    <a 
-                      href={`/Blog/${post.slug}`}
-                      class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl text-center justify-center"
-                    >
-                      Read Article
+          return (
+            <article class="bg-linear-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 hover:transform hover:scale-[1.02] shadow-lg hover:shadow-2xl">
+              <div class="flex flex-col h-full">
+                <!-- Tags -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                  {post.data.tags?.slice(0, 3).map((tag: string) => (
+                    <span class="px-3 py-1 text-xs font-medium bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                
+                <!-- Title -->
+                <h3 class="text-xl font-bold text-white mb-3 line-clamp-2 grow">
+                  <a href={`/Blog/${post.slug}`} class="hover:text-blue-400 transition-colors">
+                    {post.data.title}
+                  </a>
+                </h3>
+                
+                <!-- Description -->
+                <p class="text-gray-300 text-sm mb-6 line-clamp-3 leading-relaxed grow">
+                  {post.data.description}
+                </p>
+                
+                <!-- Metadata -->
+                <div class="flex items-center justify-between text-xs text-gray-400 mb-6">
+                  <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-1">
                       <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
                       </svg>
-                    </a>
+                      {publishDate}
+                    </span>
+                    
+                    <span class="flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                      </svg>
+                      {readingTime} min read
+                    </span>
                   </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-      )
-    )}
-
-    <!-- Featured Technologies Section -->
-    <section class="mt-20 mb-16">
+                </div>
+                
+                <!-- Read More Button -->
+                <a 
+                  href={`/Blog/${post.slug}`}
+                  class="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl text-center justify-center"
+                >
+                  Read Article
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>    <!-- Featured Technologies Section -->
+    <section class="my-20">
       <h2 class="text-3xl font-bold text-white mb-8 text-center">Technologies Covered</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
         {[
           { name: "React", color: "from-blue-500 to-cyan-500" },
           { name: "WebAssembly", color: "from-purple-500 to-pink-500" },
-          { name: "ESP32", color: "from-green-500 to-emerald-500" },
-          { name: "Zephyr RTOS", color: "from-orange-500 to-red-500" },
+          { name: "Angular", color: "from-orange-500 to-red-500" },
           { name: "SDL", color: "from-indigo-500 to-purple-500" },
           { name: ".NET Core", color: "from-violet-500 to-purple-500" },
           { name: "LVGL", color: "from-pink-500 to-rose-500" },
           { name: "Linux", color: "from-yellow-500 to-orange-500" },
           { name: "C/C++", color: "from-gray-500 to-gray-700" },
           { name: "TypeScript", color: "from-blue-600 to-blue-800" },
-          { name: "IoT", color: "from-teal-500 to-cyan-500" },
           { name: "Embedded", color: "from-amber-500 to-yellow-500" }
         ].map((tech) => (
-          <div class={`bg-gradient-to-r ${tech.color} p-4 rounded-xl text-white text-center font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}>
+          <div class={`p-4 rounded-xl text-white text-center font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}>
             {tech.name}
           </div>
         ))}
       </div>
     </section>
 
-    <!-- Statistics Section -->
-    <section class="text-center bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/30">
-      <h3 class="text-2xl font-bold text-white mb-6">Article Statistics</h3>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="text-center">
-          <div class="text-3xl font-bold text-blue-400 mb-2">{sortedPosts.length}</div>
-          <div class="text-gray-300">Total Articles</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-green-400 mb-2">
-            {Object.values(categoryMap).reduce((sum, posts) => sum + posts.length, 0)}
-          </div>
-          <div class="text-gray-300">Technical Guides</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-purple-400 mb-2">
-            {new Set(sortedPosts.flatMap(p => p.data.tags || [])).size}
-          </div>
-          <div class="text-gray-300">Technologies</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-orange-400 mb-2">
-            {Math.round(sortedPosts.reduce((sum, post) => sum + (Math.ceil((post.body?.length || 0) / 1000) || 5), 0) / sortedPosts.length)}
-          </div>
-          <div class="text-gray-300">Avg. Read Time (min)</div>
-        </div>
-      </div>
-    </section>
 
     <!-- Call to Action -->
-    <section class="text-center mt-16">
+    <section class="text-center my-16">
       <h3 class="text-2xl font-bold text-white mb-4">Want to stay updated?</h3>
       <p class="text-gray-300 mb-6 max-w-2xl mx-auto">
         Get notified when new technical articles are published. 
@@ -198,7 +134,7 @@ sortedPosts.forEach(post => {
       </p>
       <a 
         href="/DevBlog" 
-        class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-2xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl text-lg"
+        class="inline-flex items-center gap-2 px-8 py-4 bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-2xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl text-lg"
       >
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>

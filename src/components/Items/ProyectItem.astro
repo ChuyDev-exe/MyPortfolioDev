@@ -4,20 +4,13 @@ import {
   TailwindCSS, 
   AWS, 
   Nextjs, 
-  AstroI, 
   Nodejs, 
   MySQL, 
   Cpp, 
   TypeScript, 
-  Linux, 
-  RaspberryPI, 
   Qt, 
-  VisualStudioCode, 
-  Docker, 
-  Android, 
-  Microsoft,
-  LVGL,
-  Figma
+  Figma,
+JavaScript, Firefox, Chromium
 } from '../Tools/Icons';
 
 interface Props {
@@ -27,7 +20,7 @@ interface Props {
   Tools: string[];
   Description: string;
   PrevLink?: string;
-  GitLink: string;
+  GitLink?: string;
   FigmaLink?: string;
 }
 
@@ -74,6 +67,10 @@ const { imgsource, Name, Tools, Description, PrevLink, GitLink, Type, FigmaLink 
             {Tool === 'AWS' && <AWS size='1.2em'/>}
             {Tool === 'Typescript' && <TypeScript size='1.2em'/>}
             {Tool === 'Qt' && <Qt size='1.2em'/>}
+            {Tool === 'Javascript' && <JavaScript size='1.2em'/>}
+            {Tool === 'Firefox' && <Firefox size='1.2em'/>}
+            {Tool === 'Chromium' && <Chromium size='1.2em'/>}
+
           </span>
         </div>
       ))}

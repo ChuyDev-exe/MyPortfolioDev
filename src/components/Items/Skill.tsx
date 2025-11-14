@@ -9,7 +9,6 @@ import {
   MySQL, 
   Cpp, 
   TypeScript, 
-  Linux, 
   RaspberryPI, 
   Qt, 
   VisualStudioCode, 
@@ -32,10 +31,19 @@ import {
   ATMEL,
   NXP,
   Texas,
-  C
+  C,
+  Nginx,
+  Shopify,
+  WordPress,
+  cPanel,
+  SpringBoot,
+  React,
+  Angular,
+  Java,
+  Redis
 } from '../Tools/Icons';
 
-type Tab = "RTOS" | "Microcontrollers" | "Languages"| "Frameworks" | "Tools"
+type Tab = "Microcontrollers" | "Languages"| "Frameworks" | "Tools"
 
 interface TabItem {
   id: Tab
@@ -53,7 +61,6 @@ interface TabContentType {
 }
 
 const tabs: TabItem[] = [
-  { id: "RTOS", label: "RTOS" },
   { id: "Microcontrollers", label: "Microcontrollers" },
   { id: "Languages", label: "Languages" },
   { id: "Frameworks", label: "Frameworks" },
@@ -71,7 +78,7 @@ const iconMap: Record<string, ReactElement> = {
   "TypeScript": <TypeScript size='2em' className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16" />,
   "Qt": <Qt size='2em' className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16" />,
   "LVGL": <LVGL size='2.5em' className="w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20" />,
-  "Linux": <Linux size='2em' className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16" />,
+  "Shopify": <Shopify className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16" />,
   "RaspberryPi": <RaspberryPI size='2em' className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16" />,
   "Docker": <Docker size='2em' className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16" />,
   "Github": <Github size='2em' className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16" />,
@@ -88,28 +95,28 @@ const iconMap: Record<string, ReactElement> = {
   "Javascript": <JavaScript size="2em" className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
   "GraphQL": <GraphQL size="2em" className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
   "Bash": <Bash size="2em" className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
-  "Macos": <Apple size="2em" className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
+  "Wordpress": <WordPress className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
+  "MacOS": <Apple size="2em" className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
   "Windows": <Windows size="2em" className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
   "AVR" : <ATMEL size="2em" className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
   "NXP" : <NXP width="2.5em" height="1.2em" className="w-10 h-5 sm:w-14 sm:h-7 md:w-20 md:h-10"/>,
   "Texas Instruments": <Texas size="2em" className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
+  "Nginx": <Nginx className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
+  "Redis": <Redis className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
+  "SpringBoot": <SpringBoot className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
+  "React": <React className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
+  "Angular":<Angular className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
+  "Java": <Java className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16"/>,
 }
 
 const tabContent: Record<Tab, TabContentType> = {
-  RTOS: {
-    topRow: [
-      { name: "FreeRTOS", type: "text" },
-      { name: "Zephyr", type: "text" },
-      { name: "NuttX RTOS", type: "text" },
-    ],
-    bottomRow: [],
-  },
   Frameworks: {
     topRow: [
       { name: "LVGL", type: "image" },
       { name: "Qt", type: "image" },
-      { name: "Next JS", type: "image" },
-      { name: "Astro", type: "image" },
+      { name: "React", type: "image" },
+      { name: "Angular", type: "image" },
+      { name: "SpringBoot", type: "image" },
     ],
     bottomRow: [],
   },
@@ -117,24 +124,21 @@ const tabContent: Record<Tab, TabContentType> = {
     topRow: [
       { name: "C++", type: "image" },
       { name: "C", type: "image" },
-      { name: ".Net", type: "image" },
-    ],
-    bottomRow: [
+      { name: "Java", type: "image" },
       { name: "Javascript", type: "image" },
       { name: "Flutter", type: "image" },
+    ],
+    bottomRow: [
     ],
   },
   Microcontrollers: {
     topRow: [
       { name: "Espressif", type: "image" },
       { name: "STMicroelectronics", type: "image" },
-      { name: "RaspberryPi", type: "image" },
-      { name: "Microchip", type: "image" },
-      { name: "AVR", type: "image" },
+       { name: "NXP", type: "image" },
+      { name: "Texas Instruments", type: "image" },
     ],
     bottomRow: [
-      { name: "NXP", type: "image" },
-      { name: "Texas Instruments", type: "image" },
     ],
   },
   Tools: {
@@ -144,12 +148,13 @@ const tabContent: Record<Tab, TabContentType> = {
       { name: "Markdown", type: "image" },
       { name: "Docker", type: "image" },
       { name: "Github", type: "image" },
-      { name: "GraphQL", type: "image" },
     ],
     bottomRow: [
-      { name: "Linux", type: "image" },
-      { name: "Macos", type: "image" },
-      { name: "Windows", type: "image" },
+      { name: "GraphQL", type: "image" },
+      { name: "Wordpress", type: "image" },
+      { name: "Nginx", type: "image" },
+      { name: "Shopify", type: "image" },
+      { name: "Redis", type: "image" },
     ],
   }
 }
@@ -220,7 +225,7 @@ const ContentItem = ({ item }: { item: ContentItem }) => (
 )
 
 export default function TabsComponent() {
-  const [activeTab, setActiveTab] = useState<Tab>("RTOS")
+  const [activeTab, setActiveTab] = useState<Tab>("Frameworks")
 
   const handleTabClick = (tabId: Tab) => {
     console.log('Tab clicked:', tabId); // Debug log
@@ -242,7 +247,7 @@ export default function TabsComponent() {
                   e.stopPropagation();
                   handleTabClick(tab.id);
                 }}
-                className={`pb-2 sm:pb-3 md:pb-4 px-3 sm:px-4 md:px-5 lg:px-6 relative transition-colors duration-200 font-medium text-sm sm:text-base md:text-lg whitespace-nowrap flex-shrink-0 cursor-pointer select-none ${
+                className={`pb-2 sm:pb-3 md:pb-4 px-3 sm:px-4 md:px-5 lg:px-6 relative transition-colors duration-200 font-medium text-sm sm:text-base md:text-lg whitespace-nowrap shrink-0 cursor-pointer select-none ${
                   activeTab === tab.id 
                     ? "text-teal-400 border-b-2 border-teal-400" 
                     : "text-gray-300 hover:text-teal-300 border-b-2 border-transparent hover:border-teal-300/50"
