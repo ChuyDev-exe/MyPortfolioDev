@@ -11,9 +11,9 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 ---
 
 <Layout 
-	title="Jesus Velez Soto - Full-Stack Developer | Portfolio"
-	description="Portfolio profesional de Jesus Velez Soto, Full-Stack Developer especializado en React, Next.js, Node.js, sistemas embebidos y microcontroladores. Explora mis proyectos y experiencia."
-	keywords="Jesus Velez Soto, desarrollador full-stack, portfolio, React, Next.js, Node.js, sistemas embebidos, microcontroladores, ESP32, programador web"
+	title="Jesus Velez | Desarrollador Full-Stack | jesusvelez.xyz"
+	description="Jesus Velez - Desarrollador Full-Stack especializado en React, Next.js, Node.js y sistemas embebidos. Portfolio oficial de Jesus Velez Soto con proyectos innovadores en desarrollo web y microcontroladores."
+	keywords="Jesus Velez, Jesus Velez Soto, jesusvelez.xyz, desarrollador full-stack, programador, React, Next.js, Node.js, sistemas embebidos, microcontroladores, ESP32, portfolio Jesus Velez, desarrollador web Jesus Velez"
 	author="Jesus Velez Soto"
 >
 	{subdomain === '' && (
@@ -23,6 +23,7 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 				class="flex flex-row sm:flex-row max-sm:flex-col  gap-4 justify-center items-center mt-24 mb-16 z-50 transition-all duration-300 bg-transparent sticky top-10 backdrop-blur-sm border border-white rounded-xl sm:rounded-full py-2 px-4 md:px-10 w-auto mx-auto"
 				aria-label="Navegación principal"
 			>
+				<NavItem title="About" href="/about" />
 				<NavItem title="Experience" href="#Experiencia" />
 				<NavItem title="Projects" href="#Projects" />
 				<NavItem title="Blog" href="/DevBlog" /> 

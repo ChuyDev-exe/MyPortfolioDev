@@ -1,21 +1,22 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemap location
 Sitemap: https://jesusvelez.xyz/sitemap.xml
 
-# Crawl delay (1 second)
+# Crawl delay (optimized for better indexing)
 Crawl-delay: 1
 
-# Disallow specific paths if needed
-# Disallow: /admin/
-# Disallow: /private/
+# Important pages for Jesus Velez brand
+Allow: /about
+Allow: /DevBlog
+Allow: /Blog/
 
-# Allow search engines to index images
+# Allow search engines to index all media
 User-agent: Googlebot-Image
 Allow: /
 
-# Allow all crawlers to access CSS and JS files
+# Allow all crawlers to access static assets
 User-agent: *
 Allow: /*.css$
 Allow: /*.js$
@@ -25,3 +26,6 @@ Allow: /*.jpg$
 Allow: /*.jpeg$
 Allow: /*.webp$
 Allow: /*.ico$
+
+# Jesus Velez specific optimization
+# This robots.txt is for jesusvelez.xyz - Official website of Jesus Velez, Full-Stack Developer

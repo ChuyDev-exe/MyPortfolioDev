@@ -11,9 +11,9 @@ interface Props {
 const currentYear = new Date().getFullYear();
 const { 
 	title, 
-	description = "Full-Stack Developer especializado en desarrollo web moderno, microcontroladores y sistemas embebidos. Portfolio de Jesus Velez Soto con proyectos en React, Next.js, Node.js, ESP32 y más.",
+	description = "Jesus Velez - Full-Stack Developer especializado en desarrollo web moderno, microcontroladores y sistemas embebidos. Sitio oficial de Jesus Velez Soto (jesusvelez.xyz) con portfolio y proyectos en React, Next.js, Node.js, ESP32 y más.",
 	image = "/og-image.jpg",
-	keywords = "desarrollador full-stack, programador web, microcontroladores, sistemas embebidos, React, Next.js, Node.js, ESP32, JavaScript, TypeScript, portfolio",
+	keywords = "Jesus Velez, Jesus Velez Soto, jesusvelez.xyz, desarrollador full-stack, programador web, microcontroladores, sistemas embebidos, React, Next.js, Node.js, ESP32, JavaScript, TypeScript, portfolio Jesus Velez",
 	author = "Jesus Velez Soto",
 	url = Astro.url.href
 } = Astro.props;
@@ -82,12 +82,16 @@ import "@fontsource-variable/onest";
 			"@context": "https://schema.org",
 			"@type": "Person",
 			"name": "Jesus Velez Soto",
+			"alternateName": "Jesus Velez",
 			"jobTitle": "Full-Stack Developer",
-			"description": "Desarrollador Full-Stack especializado en tecnologías web modernas y sistemas embebidos",
+			"description": "Jesus Velez - Desarrollador Full-Stack especializado en tecnologías web modernas y sistemas embebidos. Creador de soluciones innovadoras en React, Node.js y microcontroladores.",
 			"url": "https://jesusvelez.xyz",
+			"mainEntityOfPage": "https://jesusvelez.xyz",
+			"image": "https://jesusvelez.xyz/og-image.jpg",
 			"sameAs": [
 				"https://github.com/ChuyDev-exe",
-				"https://www.linkedin.com/in/jesus-velez-soto-28ab11156/"
+				"https://www.linkedin.com/in/jesus-velez-soto-28ab11156/",
+				"https://codepen.io/chuydev-exe"
 			],
 			"knowsAbout": [
 				"JavaScript",
@@ -95,14 +99,27 @@ import "@fontsource-variable/onest";
 				"React",
 				"Next.js",
 				"Node.js",
+				"Angular",
 				"Desarrollo Web",
+				"Full-Stack Development",
 				"Sistemas Embebidos",
 				"ESP32",
-				"Microcontroladores"
+				"Microcontroladores",
+				"Backend Development",
+				"Frontend Development",
+				"Web Development"
 			],
-			"alumniOf": {
-				"@type": "EducationalOrganization",
-				"name": "Universidad"
+			"workLocation": {
+				"@type": "Place",
+				"name": "Remote"
+			},
+			"hasOccupation": {
+				"@type": "Occupation",
+				"name": "Full-Stack Developer",
+				"occupationLocation": {
+					"@type": "Place",
+					"name": "Worldwide"
+				}
 			}
 		}
 		</script>

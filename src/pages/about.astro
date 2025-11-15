@@ -1,0 +1,75 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const title = "Sobre Jesus Velez | Desarrollador Full-Stack | jesusvelez.xyz";
+const description = "Jesus Velez Soto - Desarrollador Full-Stack con experiencia en React, Next.js, Node.js, sistemas embebidos y microcontroladores. Conoce más sobre mi trayectoria profesional.";
+const keywords = "Jesus Velez, sobre Jesus Velez, biografía Jesus Velez, desarrollador full-stack, jesusvelez.xyz, experiencia profesional, React developer, Node.js developer";
+---
+
+<Layout 
+	title={title}
+	description={description}
+	keywords={keywords}
+>
+	<main class="max-w-4xl mx-auto px-6 py-16 text-white">
+		<article>
+			<header class="text-center mb-16">
+				<h1 class="text-5xl md:text-7xl font-bold mb-6">
+					Sobre <span class="text-[#51E4B8]">Jesus Velez</span>
+				</h1>
+				<p class="text-xl text-gray-300 max-w-3xl mx-auto">
+					Desarrollador Full-Stack apasionado por crear soluciones innovadoras que combinan desarrollo web moderno con sistemas embebidos.
+				</p>
+			</header>
+
+			<section class="mb-16">
+				<h2 class="text-3xl font-bold mb-8 text-[#51E4B8]">Mi Historia</h2>
+				<div class="prose prose-lg prose-invert max-w-none">
+					<p>
+						Soy <strong>Jesus Velez Soto</strong>, un desarrollador Full-Stack con pasión por la tecnología y la innovación. Mi experiencia abarca desde el desarrollo de aplicaciones web modernas hasta la programación de microcontroladores y sistemas embebidos.
+					</p>
+					<p>
+						En <strong>jesusvelez.xyz</strong> comparto mi trabajo, proyectos y conocimientos adquiridos a lo largo de mi carrera como desarrollador. Mi enfoque se centra en crear soluciones eficientes y escalables que resuelvan problemas reales.
+					</p>
+				</div>
+			</section>
+
+			<section class="mb-16">
+				<h2 class="text-3xl font-bold mb-8 text-[#51E4B8]">Especialidades</h2>
+				<div class="grid md:grid-cols-2 gap-8">
+					<div class="bg-gray-800/50 p-6 rounded-lg">
+						<h3 class="text-xl font-semibold mb-4">Frontend Development</h3>
+						<ul class="space-y-2 text-gray-300">
+							<li>React & Next.js</li>
+							<li>Angular & TypeScript</li>
+							<li>Responsive Design</li>
+							<li>Modern CSS & Tailwind</li>
+						</ul>
+					</div>
+					<div class="bg-gray-800/50 p-6 rounded-lg">
+						<h3 class="text-xl font-semibold mb-4">Backend Development</h3>
+						<ul class="space-y-2 text-gray-300">
+							<li>Node.js & Express</li>
+							<li>API Development</li>
+							<li>Database Design</li>
+							<li>Cloud Services</li>
+						</ul>
+					</div>
+				</div>
+			</section>
+
+			<section class="text-center">
+				<h2 class="text-3xl font-bold mb-8 text-[#51E4B8]">¿Hablamos?</h2>
+				<p class="text-xl text-gray-300 mb-8">
+					Estoy siempre abierto a nuevos proyectos y colaboraciones.
+				</p>
+				<a 
+					href="mailto:jesus@jesusvelez.xyz" 
+					class="inline-flex items-center gap-3 px-8 py-4 bg-[#51E4B8] text-black rounded-lg font-semibold hover:bg-[#45d4a8] transition-colors"
+				>
+					Contactar a Jesus Velez
+				</a>
+			</section>
+		</article>
+	</main>
+</Layout>
