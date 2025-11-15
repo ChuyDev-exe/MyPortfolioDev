@@ -10,12 +10,18 @@ import TabsComponent from "../components/Items/Skill";
 const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 ---
 
-<Layout title="Jesus Velez Soto">
+<Layout 
+	title="Jesus Velez Soto - Full-Stack Developer | Portfolio"
+	description="Portfolio profesional de Jesus Velez Soto, Full-Stack Developer especializado en React, Next.js, Node.js, sistemas embebidos y microcontroladores. Explora mis proyectos y experiencia."
+	keywords="Jesus Velez Soto, desarrollador full-stack, portfolio, React, Next.js, Node.js, sistemas embebidos, microcontroladores, ESP32, programador web"
+	author="Jesus Velez Soto"
+>
 	{subdomain === '' && (
 		<>
 			<nav
 				id="navbar"
-				class="flex flex-row sm:flex-row max-sm:flex-col  gap-4 justify-center items-center mt-24 mb-16 z-50 transition-all duration-300 bg-transparent sticky top-10 backdrop-blur-sm border border-white rounded-xl sm:rounded-full py-2 px-6 px-10 w-auto mx-auto"
+				class="flex flex-row sm:flex-row max-sm:flex-col  gap-4 justify-center items-center mt-24 mb-16 z-50 transition-all duration-300 bg-transparent sticky top-10 backdrop-blur-sm border border-white rounded-xl sm:rounded-full py-2 px-4 md:px-10 w-auto mx-auto"
+				aria-label="Navegación principal"
 			>
 				<NavItem title="Experience" href="#Experiencia" />
 				<NavItem title="Projects" href="#Projects" />

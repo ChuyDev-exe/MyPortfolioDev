@@ -5,23 +5,96 @@ import "@fontsource-variable/onest";
 
 interface Props {
 	title: string;
+	description?: string;
+	image?: string;
+	keywords?: string;
+	author?: string;
+	url?: string;
 }
-const { title } = Astro.props;
+
+const { 
+	title, 
+	description = "Blog de desarrollo web y tecnología por Jesus Velez Soto. Artículos sobre JavaScript, React, sistemas embebidos, ESP32 y más.",
+	image = "/blog-og-image.jpg",
+	keywords = "blog desarrollo web, tutoriales programación, JavaScript, React, ESP32, sistemas embebidos, tecnología",
+	author = "Jesus Velez Soto",
+	url = Astro.url.href
+} = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Astro description" />
-		<meta name="viewport" content="width=device-width" />
+		<!-- Primary Meta Tags -->
+		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
+		<meta name="keywords" content={keywords} />
+		<meta name="author" content={author} />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="robots" content="index, follow" />
+		<meta name="language" content="es" />
+		<meta name="theme-color" content="#51E4B8" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="article" />
+		<meta property="og:url" content={url} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={new URL(image, Astro.url).href} />
+		<meta property="og:site_name" content="Jesus Velez Soto - Dev Blog" />
+		<meta property="og:locale" content="es_ES" />
+		
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content={url} />
+		<meta property="twitter:title" content={title} />
+		<meta property="twitter:description" content={description} />
+		<meta property="twitter:image" content={new URL(image, Astro.url).href} />
+		<meta name="twitter:creator" content="@ChuyDev" />
+		
+		<!-- Canonical URL -->
+		<link rel="canonical" href={url} />
+		
+		<!-- Favicons -->
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+		
+		<!-- Generator -->
 		<meta name="generator" content={Astro.generator} />
+		
+		<!-- Preload critical fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Allan&family=IM+Fell+Great+Primer+SC&family=Imperial+Script&family=Imprima&display=swap"
+			media="print"
+			onload="this.media='all'"
 		/>
-		<title>{title}</title>
+		
+		<!-- Blog-specific Schema Markup -->
+		<script type="application/ld+json" is:inline>
+		{
+			"@context": "https://schema.org",
+			"@type": "Blog",
+			"name": "Jesus Velez Soto - Dev Blog",
+			"description": "Blog de desarrollo web y tecnología",
+			"url": "https://jesusvelez.xyz/DevBlog",
+			"author": {
+				"@type": "Person",
+				"name": "Jesus Velez Soto",
+				"url": "https://jesusvelez.xyz"
+			},
+			"publisher": {
+				"@type": "Person",
+				"name": "Jesus Velez Soto"
+			}
+		}
+		</script>
 	</head>
 	<body class="min-h-screen">
 		<div class="max-w-screen-2xl mx-auto px-6 lg:px-8">

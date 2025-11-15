@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://jesusvelez.xyz/sitemap.xml
+
+# Crawl delay (1 second)
+Crawl-delay: 1
+
+# Disallow specific paths if needed
+# Disallow: /admin/
+# Disallow: /private/
+
+# Allow search engines to index images
+User-agent: Googlebot-Image
+Allow: /
+
+# Allow all crawlers to access CSS and JS files
+User-agent: *
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.svg$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.webp$
+Allow: /*.ico$

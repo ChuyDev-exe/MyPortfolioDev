@@ -1,27 +1,111 @@
 ---
 interface Props {
 	title: string;
+	description?: string;
+	image?: string;
+	keywords?: string;
+	author?: string;
+	url?: string;
 }
 
 const currentYear = new Date().getFullYear();
-const { title } = Astro.props;
+const { 
+	title, 
+	description = "Full-Stack Developer especializado en desarrollo web moderno, microcontroladores y sistemas embebidos. Portfolio de Jesus Velez Soto con proyectos en React, Next.js, Node.js, ESP32 y más.",
+	image = "/og-image.jpg",
+	keywords = "desarrollador full-stack, programador web, microcontroladores, sistemas embebidos, React, Next.js, Node.js, ESP32, JavaScript, TypeScript, portfolio",
+	author = "Jesus Velez Soto",
+	url = Astro.url.href
+} = Astro.props;
 import "../styles/global.css";
 import "@fontsource-variable/onest";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Astro description" />
-		<meta name="viewport" content="width=device-width" />
+		<!-- Primary Meta Tags -->
+		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
+		<meta name="keywords" content={keywords} />
+		<meta name="author" content={author} />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="robots" content="index, follow" />
+		<meta name="language" content="es" />
+		<meta name="theme-color" content="#51E4B8" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={url} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={new URL(image, Astro.url).href} />
+		<meta property="og:site_name" content="Jesus Velez Soto - Portfolio" />
+		<meta property="og:locale" content="es_ES" />
+		
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content={url} />
+		<meta property="twitter:title" content={title} />
+		<meta property="twitter:description" content={description} />
+		<meta property="twitter:image" content={new URL(image, Astro.url).href} />
+		<meta name="twitter:creator" content="@ChuyDev" />
+		
+		<!-- Canonical URL -->
+		<link rel="canonical" href={url} />
+		
+		<!-- Favicons -->
 		<link rel="icon" type="image/x-icon" href="/Logo.ico" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+		<link rel="manifest" href="/site.webmanifest" />
+		
+		<!-- Generator -->
 		<meta name="generator" content={Astro.generator} />
+		
+		<!-- Preload critical fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Allan&family=IM+Fell+Great+Primer+SC&family=Imperial+Script&family=Imprima&display=swap"
+			media="print"
+			onload="this.media='all'"
 		/>
-		<title>{title}</title>
+		
+		<!-- JSON-LD Schema Markup -->
+		<script type="application/ld+json" is:inline>
+		{
+			"@context": "https://schema.org",
+			"@type": "Person",
+			"name": "Jesus Velez Soto",
+			"jobTitle": "Full-Stack Developer",
+			"description": "Desarrollador Full-Stack especializado en tecnologías web modernas y sistemas embebidos",
+			"url": "https://jesusvelez.xyz",
+			"sameAs": [
+				"https://github.com/ChuyDev-exe",
+				"https://www.linkedin.com/in/jesus-velez-soto-28ab11156/"
+			],
+			"knowsAbout": [
+				"JavaScript",
+				"TypeScript",
+				"React",
+				"Next.js",
+				"Node.js",
+				"Desarrollo Web",
+				"Sistemas Embebidos",
+				"ESP32",
+				"Microcontroladores"
+			],
+			"alumniOf": {
+				"@type": "EducationalOrganization",
+				"name": "Universidad"
+			}
+		}
+		</script>
 	</head>
 	<body>
 		<div class=" flex flex-col w-full justify-center items-center">
@@ -40,8 +124,7 @@ import "@fontsource-variable/onest";
 			</div>
 			<div class="flex gap-12 md:gap-10 max-sm:gap-10 max-sm:wrap max-sm:flex-col">
 				<a
-					href"
-					"
+					href="mailto:jesus@jesusvelez.xyz"
 					class="cursor-pointer text-lg relative px-2 flex justify-center items-center hover:text-[#51E4B8]
 				before:content-[''] before:absolute before:top-[125%] before:left-1/2
 				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
@@ -51,8 +134,9 @@ import "@fontsource-variable/onest";
 				</a>
 
 				<a
-					href"
-					"
+					href="https://codepen.io/chuydev-exe"
+					target="_blank"
+					rel="noopener noreferrer"
 					class="cursor-pointer text-lg relative px-2 flex justify-center items-center hover:text-[#51E4B8]
 				before:content-[''] before:absolute before:top-[125%] before:left-1/2
 				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
@@ -60,8 +144,9 @@ import "@fontsource-variable/onest";
 					>CODEPEN</a
 				>
 				<a
-					href"
-					"
+					href="https://github.com/ChuyDev-exe"
+					target="_blank"
+					rel="noopener noreferrer"
 					class="cursor-pointer text-lg relative px-2 flex justify-center items-center hover:text-[#51E4B8]
 				before:content-[''] before:absolute before:top-[125%] before:left-1/2
 				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
@@ -69,8 +154,9 @@ import "@fontsource-variable/onest";
 					>GITHUB</a
 				>
 				<a
-					hhref"
-					"
+					href="https://www.linkedin.com/in/jesus-velez-soto-28ab11156/"
+					target="_blank"
+					rel="noopener noreferrer"
 					class="cursor-pointer text-lg relative px-2 flex justify-center items-center hover:text-[#51E4B8]
 				before:content-[''] before:absolute before:top-[125%] before:left-1/2
 				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent

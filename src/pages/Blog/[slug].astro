@@ -35,22 +35,27 @@ const groupedHeadings = headings.reduce((acc, heading, index) => {
 }, [] as any[]);
 ---
 
-<BlogLayout title={frontmatter.title}>
+<BlogLayout 
+  title={frontmatter.title}
+  description={frontmatter.description || `Artículo técnico: ${frontmatter.title}`}
+  keywords={frontmatter.tags?.join(", ") || "desarrollo web, programación"}
+  author={frontmatter.author || "Jesus Velez Soto"}
+>
   <!-- Navigation -->
-  <nav class="flex gap-2 sm:gap-5 flex-row justify-center items-center w-full py-8 sm:py-12 px-2 sm:px-4">
+  <nav class="flex gap-2 sm:gap-5 flex-row justify-center items-center w-full py-8 sm:py-12 px-2 sm:px-4" aria-label="Navegación del artículo">
     <NavItem title="Blog Home" href="/DevBlog" />
     <NavItem title="All Posts" href="/Blog/Posts" />
     <NavItem title="Portfolio" href="https://jesusvelez.xyz" />
   </nav>
 
-  <!-- Article Header -->
+  <!-- Article -->
   <article class="mx-auto">
     <header class="mb-12 sm:mb-16 text-center max-w-5xl mx-auto px-2 sm:px-6">
       <!-- Category/Tags -->
       {frontmatter.tags && (
         <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
           {frontmatter.tags.map((tag: string) => (
-            <span class="p-1.5 text-xxs sm:text-sm font-medium rounded-lg bg-blue-900 text-slate-200 ">
+            <span class="p-1.5 text-xxs sm:text-sm font-medium rounded-lg bg-blue-900 text-slate-200">
               {tag}
             </span>
           ))}
@@ -58,7 +63,7 @@ const groupedHeadings = headings.reduce((acc, heading, index) => {
       )}
       
       <!-- Title -->
-      <h1 class="text-1xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-bold text-white mb-6 sm:mb-8   ">
+      <h1 class="text-1xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-bold text-white mb-6 sm:mb-8">
         {frontmatter.title}
       </h1>
       
@@ -70,17 +75,23 @@ const groupedHeadings = headings.reduce((acc, heading, index) => {
       )}
       
       <!-- Meta Information -->
-      <div class="flex flex-roe flex-wrap items-center justify-center gap-3 sm:gap-8 text-sm sm:text-base text-gray-500 px-1">
+      <div class="flex flex-row flex-wrap items-center justify-center gap-3 sm:gap-8 text-sm sm:text-base text-gray-500 px-1">
         {frontmatter.author && (
           <div class="flex items-center gap-2 sm:gap-3">
-            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
               <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
             </svg>
-            <span class="font-medium">{frontmatter.author}</span>
+            <span class="font-medium">Por {frontmatter.author}</span>
           </div>
         )}
-        
-
+        {frontmatter.date && (
+          <div class="flex items-center gap-2 sm:gap-3">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+            </svg>
+            <time datetime={frontmatter.date.toISOString()}>{new Date(frontmatter.date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+          </div>
+        )}
       </div>
       
       <!-- Divider -->

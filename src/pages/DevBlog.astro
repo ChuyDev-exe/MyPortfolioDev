@@ -1,7 +1,6 @@
 ---
 import NavItem from "../components/NavItem.astro";
 import BlogLayout from "../layouts/BlogLayout.astro";
-import { TagTopic } from "../components/Tools/Tags";
 import { getCollection } from 'astro:content';
 
 // Get all blog posts and sort by date (most recent first)
@@ -12,30 +11,32 @@ const sortedPosts = allPosts.sort((a, b) =>
 
 // Get the first 6 posts for featured section
 const featuredPosts = sortedPosts.slice(0, 6);
-// Get the next 4 posts for additional articles
-const additionalPosts = sortedPosts.slice(6, 10);
 ---
 
-<BlogLayout title="Blog Dev">
-    <nav class="flex gap-5 flex-row justify-center w-full my-10">
+<BlogLayout 
+    title="Dev Blog - Jesus Velez Soto | Tutoriales y Artículos Técnicos"
+    description="Blog técnico especializado en desarrollo web, sistemas embebidos, microcontroladores y tecnologías modernas. Tutoriales, tips y soluciones prácticas."
+    keywords="blog técnico, tutoriales programación, desarrollo web, sistemas embebidos, microcontroladores, ESP32, JavaScript, React, backend"
+>
+    <nav class="flex gap-5 flex-row justify-center w-full my-10" aria-label="Navegación del blog">
         <NavItem title="Experience" href="https://jesusvelez.xyz#Experiencia" />
         <NavItem title="Projects" href="https://jesusvelez.xyz#Projects"/>
         <NavItem title="Portfolio" href="https://jesusvelez.xyz" />
     </nav>
 
-    <div class="flex w-full items-center justify-center flex-col mb-20">
-        <section class="h-[500px] flex flex-col w-[80%]">
+    <main class="flex w-full items-center justify-center flex-col mb-20">
+        <header class="h-[500px] flex flex-col w-[80%]">
             <div class="py-3 px-4 mx-auto max-w-7xl text-center lg:py-10">
                 <h1
                     class="mb-2 text-4xl font-extrabold tracking-tight leading-none md:text-5xl lg:text-8xl text-white"
                 >
                     Find your Dev problem here
                 </h1>
-                <h1
+                <h2
                     class="mb-10 text-2xl font-extrabold tracking-tight leading-none md:text-4xl lg:text-6xl text-white"
                 >
                     Was my problem too
-                </h1>
+                </h2>
                 <p
                     class=" text-lg font-normal text-gray-500 lg:text-xl sm:px-16 lg:px-48 dark:text-gray-400"
                 >
@@ -46,6 +47,7 @@ const additionalPosts = sortedPosts.slice(6, 10);
             <a
                 href="/Blog/Posts"
                 class="md:mr-[200px] md:self-end text-white hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-lg px-7 py-4 text-center inline-flex justify-center items-center bg-blue-600 dark:hover:bg-51E4B8 dark:focus:ring-blue-800"
+                aria-label="Ver todos los artículos del blog"
             >
                 Let's check Post
                 <svg
@@ -63,8 +65,8 @@ const additionalPosts = sortedPosts.slice(6, 10);
                         d="M1 5h12m0 0L9 1m4 4L9 9"></path>
                 </svg>
             </a>
-        </section>
-    </div>
+        </header>
+    </main>
 
     <div class="flex w-full items-center justify-center flex-col gap-[30px]">
         <h1
