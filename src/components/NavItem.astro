@@ -1,7 +1,7 @@
 ---
-const { href, title, body } = Astro.props;
+const { href, title, class: className } = Astro.props;
 ---
 
-<a class="flex h-auto text-white hover:text-[#51E4B8] text-md  cursor-pointer font-light" href={href} >
+<a class:list={["flex h-auto text-white hover:text-[#51E4B8] cursor-pointer font-light", className || "text-sm sm:text-base"]} href={href} >
 	{title}
 </a>

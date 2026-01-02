@@ -27,37 +27,54 @@ interface Props {
 const { imgsource, Name, Tools, Description, PrevLink, GitLink, Type, FigmaLink } = Astro.props;
 ---
 
-<div class="h-full group bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 hover:transform hover:scale-[1.02] shadow-lg hover:shadow-2xl flex flex-col">
+<div class="h-full group relative bg-transparent hover:bg-[#0a0a0a] rounded-2xl overflow-hidden border border-white/10 hover:border-[#51E4B8]/50 transition-all duration-500 hover:shadow-[0_0_30px_-10px_rgba(81,228,184,0.3)] flex flex-col">
+  
+  <!-- Hover Glow Effect -->
+  <div class="absolute inset-0 bg-gradient-to-br from-[#51E4B8]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
   <!-- Image Section -->
   {imgsource && (
-    <div class="relative overflow-hidden aspect-video sm:aspect-[16/10] lg:aspect-video">
+    <div class="relative overflow-hidden aspect-video">
       <img 
         src={imgsource} 
-        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
         alt={`${Name} preview`} 
         loading="lazy"
       />
-      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80"></div>
     </div>
   )}
   
   <!-- Content Section -->
-  <div class="flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 lg:p-5 flex-1">
+  <div class="flex flex-col gap-4 p-6 flex-1 relative z-10">
     <!-- Header -->
-    <div class="flex flex-col gap-1">
-      <h1 class="text-base sm:text-lg lg:text-xl text-[#51E4B8] font-bold uppercase tracking-wide line-clamp-2">
-        {Name}
-      </h1>
-      <h2 class="text-xs sm:text-sm text-gray-300 font-medium">
+    <div class="flex flex-col gap-2">
+      <div class="flex justify-between items-start gap-2">
+        <h1 class="text-xl text-white font-bold tracking-tight group-hover:text-[#51E4B8] transition-colors duration-300">
+          {Name}
+        </h1>
+        {GitLink && (
+          <a href={GitLink} target="_blank" class="text-gray-400 hover:text-white transition-colors">
+            <Github size="1.2em" />
+          </a>
+        )}
+      </div>
+      <span class="text-xs font-medium text-[#51E4B8] bg-[#51E4B8]/10 px-2 py-1 rounded-md w-fit border border-[#51E4B8]/20">
         {Type}
-      </h2>
+      </span>
+    </div>
+
+    <!-- Description -->
+    <div class="flex-grow">
+      <p class="text-sm text-gray-400 leading-relaxed line-clamp-3 group-hover:text-gray-300 transition-colors duration-300">
+        {Description}
+      </p>
     </div>
 
     <!-- Tools/Technologies -->
-    <div class="flex flex-wrap gap-1.5 sm:gap-2">
+    <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/5">
       {Tools.map((Tool) => (
-        <div class="flex items-center justify-center p-1 sm:p-1.5 rounded-md bg-gray-700/50 hover:bg-gray-600/50 transition-colors duration-200 group/tool">
-          <span class="text-slate-100 transition-transform duration-200 group-hover/tool:scale-110 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 flex items-center justify-center">
+        <div class="text-gray-400 hover:text-[#51E4B8] transition-colors duration-300" title={Tool}>
             {Tool === 'MySQL' && <MySQL size='1.2em'/>}
             {Tool === 'C' && <Cpp size='1.2em'/>}
             {Tool === 'Cpp' && <Cpp size='1.2em'/>}
@@ -70,55 +87,35 @@ const { imgsource, Name, Tools, Description, PrevLink, GitLink, Type, FigmaLink 
             {Tool === 'Javascript' && <JavaScript size='1.2em'/>}
             {Tool === 'Firefox' && <Firefox size='1.2em'/>}
             {Tool === 'Chromium' && <Chromium size='1.2em'/>}
-
-          </span>
         </div>
       ))}
     </div>
 
-    <!-- Description -->
-    <div class="flex-grow">
-      <p class="text-xs sm:text-sm lg:text-base text-gray-300 leading-relaxed line-clamp-2 sm:line-clamp-3">
-        {Description}
-      </p>
-    </div>
-
     <!-- Action Buttons -->
-    <div class="flex flex-wrap gap-1.5 sm:gap-2 pt-1 sm:pt-2 mt-auto">
+    <div class="flex gap-3 mt-2">
       {PrevLink && (
         <a 
           href={PrevLink}
           target="_blank"
           rel="noopener noreferrer"
-          class="flex-1 sm:flex-initial min-w-0 py-1.5 sm:py-2 px-2 sm:px-3 rounded-md border border-slate-300/50 text-slate-100/70 hover:text-slate-100 hover:border-slate-300 hover:bg-slate-700/30 transition-all duration-200 text-center text-xs sm:text-sm font-medium"
+          class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/5 hover:bg-[#51E4B8] text-white hover:text-[#0a0a0a] font-medium transition-all duration-300 group/btn"
         >
-          <span class="inline">Preview</span>
+          <span>View Project</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
         </a>
       )}
-
-      <a 
-        href={GitLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-md border border-slate-300/50 text-slate-100/70 hover:text-slate-100 hover:border-slate-300 hover:bg-slate-700/30 transition-all duration-200 group/github"
-      >
-        <span class="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 group-hover/github:scale-110 flex items-center justify-center">
-          <Github />
-        </span>
-        <span class="ml-1 sm:ml-2 hidden lg:inline text-xs font-medium">GitHub</span>
-      </a>
-
+      
       {FigmaLink && (
         <a 
           href={FigmaLink}
           target="_blank"
           rel="noopener noreferrer"
-          class="flex items-center justify-center py-1.5 sm:py-2 px-2 sm:px-3 rounded-md border border-slate-300/50 text-slate-100/70 hover:text-slate-100 hover:border-slate-300 hover:bg-slate-700/30 transition-all duration-200 group/figma"
+          class="flex items-center justify-center p-2.5 rounded-xl bg-white/5 hover:bg-[#51E4B8] text-white hover:text-[#0a0a0a] transition-all duration-300"
+          title="View Design"
         >
-          <span class="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 group-hover/figma:scale-110 flex items-center justify-center">
-            <Figma />
-          </span>
-          <span class="ml-1 sm:ml-2 hidden lg:inline text-xs font-medium">Design</span>
+          <Figma size="1.2em" />
         </a>
       )}
     </div>
