@@ -115,7 +115,7 @@ const SkillCard = ({ item, index }: { item: ContentItem; index: number }) => (
       animationFillMode: 'forwards'
     }}
   >
-    <div className="w-12 h-12 sm:w-20 sm:h-20 flex items-center justify-center text-gray-500 group-hover:text-[#51E4B8] transition-all duration-500 group-hover:scale-110 filter grayscale group-hover:grayscale-0">
+    <div className="w-12 h-12 sm:w-8 sm:h-8 flex items-center justify-center text-gray-500 group-hover:text-[#51E4B8] transition-all duration-500 group-hover:scale-110 filter grayscale group-hover:grayscale-0">
       {item.icon || <span className="text-2xl font-bold">{item.name[0]}</span>}
     </div>
     <span className="text-xs sm:text-base font-medium text-gray-500 group-hover:text-white transition-colors duration-300 text-center">
