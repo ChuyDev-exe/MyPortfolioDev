@@ -1,11 +1,13 @@
 [build]
-  command = ""
+  command = "npm run build"
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
 
-# Configuración para el dominio principal (portfolio)
+[functions]
+  directory = "netlify/functions"
+
 [[redirects]]
   from = "https://jesusvelez.xyz/Blog/*"
   to = "https://blog.jesusvelez.xyz/Blog/:splat"
@@ -18,32 +20,31 @@
   status = 301
   force = true
 
-# Configuración para el subdominio blog
 [[redirects]]
   from = "https://blog.jesusvelez.xyz/"
   to = "https://blog.jesusvelez.xyz/DevBlog"
   status = 200
 
-# Configuración específica del subdominio blog - mapear todas las rutas del blog
 [[redirects]]
   from = "https://blog.jesusvelez.xyz/Blog/*"
   to = "/Blog/:splat"
   status = 200
-  headers = { Host = "blog.jesusvelez.xyz" }
 
 [[redirects]]
   from = "https://blog.jesusvelez.xyz/DevBlog"
   to = "/DevBlog"
   status = 200
-  headers = { Host = "blog.jesusvelez.xyz" }
 
-# Manejar rutas SPA
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Headers para CORS si es necesario
 [[headers]]
   for = "/*"
   [headers.values]
@@ -52,8 +53,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# Configuración específica para archivos estáticos
 [[headers]]
-  for = "/assets/*"
+  for = "/_astro/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
