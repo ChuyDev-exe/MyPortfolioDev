@@ -179,21 +179,38 @@ jobs:
       # ── Health-check after deploy ─────────────────────────
       - name: 🩺 Health check
         run: |
-          SITE_URL="https://jesusvelez.xyz"
-          echo "Running health check on $SITE_URL..."
+          # Check the Netlify deploy URL (always available immediately)
+          DEPLOY_URL="${{ steps.netlify.outputs.deploy-url }}"
+          CUSTOM_URL="https://jesusvelez.xyz"
           MAX_RETRIES=5
           RETRY_DELAY=10
+
+          echo "▶ Checking Netlify deploy URL: $DEPLOY_URL"
           for i in $(seq 1 $MAX_RETRIES); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL" || echo "000")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL" || echo "000")
             echo "Attempt $i/$MAX_RETRIES — HTTP $STATUS"
             if [ "$STATUS" = "200" ]; then
-              echo "✅ Health check passed"
-              exit 0
+              echo "✅ Netlify deploy URL is healthy"
+              break
+            fi
+            if [ "$i" = "$MAX_RETRIES" ]; then
+              echo "❌ Netlify deploy URL failed after $MAX_RETRIES attempts"
+              exit 1
             fi
             sleep $RETRY_DELAY
           done
-          echo "❌ Health check failed after $MAX_RETRIES attempts"
-          exit 1
+
+          # Check custom domain — warn only (DNS propagation may take time)
+          echo ""
+          echo "▶ Checking custom domain: $CUSTOM_URL"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$CUSTOM_URL" || echo "000")
+          echo "Custom domain HTTP $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Custom domain is healthy"
+          else
+            echo "⚠️ Custom domain returned HTTP $STATUS — may be a DNS/propagation issue (non-fatal)"
+            echo "⚠️ Custom domain check: HTTP $STATUS — verify DNS config in Netlify dashboard" >> $GITHUB_STEP_SUMMARY
+          fi
 
       # ── Create GitHub Release tag ─────────────────────────
       - name: 🏷️ Create GitHub Release
