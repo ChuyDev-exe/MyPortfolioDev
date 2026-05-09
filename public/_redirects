@@ -8,5 +8,4 @@ https://blog.jesusvelez.xyz/       /DevBlog      200!
 https://jesusvelez.xyz/Blog/*  https://blog.jesusvelez.xyz/Blog/:splat  301!
 https://jesusvelez.xyz/DevBlog https://blog.jesusvelez.xyz/DevBlog       301!
 
-# Fallback para SPA y rutas dinámicas
-/*  /index.html  200
+# El routing SSR es manejado automaticamente por el adapter @astrojs/netlify

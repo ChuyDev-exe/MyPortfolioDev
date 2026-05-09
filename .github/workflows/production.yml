@@ -95,12 +95,18 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> ⏳ **Waiting for manual approval before deploying to production.**" >> $GITHUB_STEP_SUMMARY
 
-      - name: 📤 Upload production artifact
+      - name: 📤 Upload production artifact (dist)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.meta.outputs.artifact-name }}
           path: dist/
-          # Keep for 30 days so you can re-deploy or roll back
+          retention-days: 30
+
+      - name: 📤 Upload Netlify functions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.artifact-name }}-netlify
+          path: .netlify/
           retention-days: 30
 
   # ── 2. Manual approval gate ────────────────────────────────
@@ -137,11 +143,17 @@ jobs:
       - name: ⬇️ Checkout (for Netlify project config)
         uses: actions/checkout@v4
 
-      - name: 📥 Download production artifact
+      - name: 📥 Download production artifact (dist)
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.artifact-name }}
           path: dist/
+
+      - name: 📥 Download Netlify functions artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}-netlify
+          path: .netlify/
 
       - name: 🟢 Setup Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
@@ -160,6 +172,7 @@ jobs:
         run: |
           OUTPUT=$(netlify deploy \
             --dir=dist \
+            --functions=.netlify/v1/functions \
             --prod \
             --no-build \
             --site=${{ secrets.NETLIFY_SITE_ID }} \
