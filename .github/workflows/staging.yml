@@ -94,6 +94,7 @@ jobs:
         run: |
           OUTPUT=$(netlify deploy \
             --dir=dist \
+            --no-build \
             --site=${{ secrets.NETLIFY_STAGING_SITE_ID }} \
             --auth=${{ secrets.NETLIFY_AUTH_TOKEN }} \
             --message="Staging: ${{ github.ref_name }} @ ${{ github.sha }}" \
