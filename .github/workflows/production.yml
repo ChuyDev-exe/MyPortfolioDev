@@ -95,18 +95,20 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> ⏳ **Waiting for manual approval before deploying to production.**" >> $GITHUB_STEP_SUMMARY
 
-      - name: 📤 Upload production artifact (dist)
+      - name: � Package build output
+        run: |
+          echo "=== dist/ contents ==="
+          ls -lR dist/
+          echo "=== .netlify/ contents ==="
+          ls -lR .netlify/ || echo ".netlify/ not found"
+          tar -czf build-output.tar.gz dist/ .netlify/
+          echo "Tarball size: $(du -sh build-output.tar.gz)"
+
+      - name: 📤 Upload production artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.meta.outputs.artifact-name }}
-          path: dist/
-          retention-days: 30
-
-      - name: 📤 Upload Netlify functions artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.meta.outputs.artifact-name }}-netlify
-          path: .netlify/
+          path: build-output.tar.gz
           retention-days: 30
 
   # ── 2. Manual approval gate ────────────────────────────────
@@ -143,17 +145,19 @@ jobs:
       - name: ⬇️ Checkout (for Netlify project config)
         uses: actions/checkout@v4
 
-      - name: 📥 Download production artifact (dist)
+      - name: 📥 Download production artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.artifact-name }}
-          path: dist/
+          path: .
 
-      - name: 📥 Download Netlify functions artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build.outputs.artifact-name }}-netlify
-          path: .netlify/
+      - name: 📦 Extract build output
+        run: |
+          tar -xzf build-output.tar.gz
+          echo "=== dist/ ==="
+          ls -lR dist/
+          echo "=== .netlify/ ==="
+          ls -lR .netlify/ || echo ".netlify/ not found"
 
       - name: 🟢 Setup Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4

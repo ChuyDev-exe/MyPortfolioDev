@@ -52,19 +52,15 @@ jobs:
           # Expose any public env vars your site needs
           PUBLIC_SITE_URL: ${{ vars.STAGING_SITE_URL }}
 
-      # Upload dist/ so the deploy job can use it without rebuilding
-      - name: 📤 Upload build artifact (dist)
+      # Upload dist/ + .netlify/ so the deploy job can use them without rebuilding
+      - name: 📦 Package build output
+        run: tar -czf build-output.tar.gz dist/ .netlify/
+
+      - name: 📤 Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist-staging-${{ github.sha }}
-          path: dist/
-          retention-days: 1
-
-      - name: 📤 Upload Netlify functions artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: netlify-staging-${{ github.sha }}
-          path: .netlify/
+          path: build-output.tar.gz
           retention-days: 1
 
   # ── 2. Deploy to Netlify (staging / draft) ─────────────────
@@ -85,13 +81,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dist-staging-${{ github.sha }}
-          path: dist/
+          path: .
 
-      - name: 📥 Download Netlify functions artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: netlify-staging-${{ github.sha }}
-          path: .netlify/
+      - name: 📦 Extract build output
+        run: tar -xzf build-output.tar.gz
 
       - name: 🟢 Setup Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
