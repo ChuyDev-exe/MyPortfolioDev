@@ -150,7 +150,7 @@ jobs:
           cache: "npm"
 
       - name: 📦 Install Netlify CLI
-        run: npm install -g netlify-cli
+        run: npm install -g netlify-cli@26.0.1
 
       - name: 🚀 Deploy to Netlify PRODUCTION
         id: netlify
