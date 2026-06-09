@@ -61,7 +61,7 @@ const sortedPosts = allPosts.sort((a, b) =>
                 
                 <!-- Title -->
                 <h3 class="text-xl font-bold text-white mb-3 line-clamp-2 grow">
-                  <a href={`/Blog/${post.slug}`} class="hover:text-blue-400 transition-colors" aria-label={`Leer artículo: ${post.data.title}`}>
+                  <a href={`/Blog/${post.id}`} class="hover:text-blue-400 transition-colors" aria-label={`Leer artículo: ${post.data.title}`}>
                     {post.data.title}
                   </a>
                 </h3>
@@ -92,7 +92,7 @@ const sortedPosts = allPosts.sort((a, b) =>
                 
                 <!-- Read More Button -->
                 <a 
-                  href={`/Blog/${post.slug}`}
+                  href={`/Blog/${post.id}`}
                   class="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl text-center justify-center"
                   aria-label={`Leer artículo completo: ${post.data.title}`}
                 >

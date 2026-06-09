@@ -808,16 +808,16 @@ const Chromium = ({ size = "1em", ...props }: SVGProps<SVGSVGElement> & { size?:
 
 
 
-const Terraform = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...props} id="terraform__Logos" viewBox="0 0 50 72">
+const Terraform = ({ size = "1em", ...props }: SVGProps<SVGSVGElement> & { size?: string }) => (
+  <svg width={size} height={size} {...props} id="terraform__Logos" viewBox="0 0 50 72">
     <path d="m17.2 17.5 15.5 9v18l-15.5-9v-18ZM34.5 26.5v18l15.5-9v-18l-15.5 9ZM0 7.5v18l15.5 9v-18L0 7.5ZM17.2 55.5l15.5 9v-18l-15.5-9v18Z" />
   </svg>
 );
 
 
 
-const Cloudflare = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...props} viewBox="0 0 256 116" preserveAspectRatio="xMidYMid">
+const Cloudflare = ({ size = "1em", ...props }: SVGProps<SVGSVGElement> & { size?: string }) => (
+  <svg width={size} height={size} {...props} viewBox="0 0 256 116" preserveAspectRatio="xMidYMid">
     <path
       fill="#FFF"
       d="m202.357 49.394-5.311-2.124C172.085 103.434 72.786 69.289 66.81 85.997c-.996 11.286 54.227 2.146 93.706 4.059 12.039.583 18.076 9.671 12.964 24.484l10.069.031c11.615-36.209 48.683-17.73 50.232-29.68-2.545-7.857-42.601 0-31.425-35.497Z"
@@ -835,8 +835,8 @@ const Cloudflare = (props: SVGProps<SVGSVGElement>) => (
 
 
 
-const CloudflareWorkers = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...props} viewBox="0 0 256 231" preserveAspectRatio="xMidYMid">
+const CloudflareWorkers = ({ size = "1em", ...props }: SVGProps<SVGSVGElement> & { size?: string }) => (
+  <svg width={size} height={size} {...props} viewBox="0 0 256 231" preserveAspectRatio="xMidYMid">
     <defs>
       <linearGradient
         id="cloudflare_workers__a"
@@ -960,8 +960,10 @@ const CloudflareWorkers = (props: SVGProps<SVGSVGElement>) => (
 );
 
 
-const TanStack = (props: SVGProps<SVGSVGElement>) => (
+const TanStack = ({ size = "1em", ...props }: SVGProps<SVGSVGElement> & { size?: string }) => (
   <svg
+    width={size}
+    height={size}
     {...props}
     xmlnsXlink="http://www.w3.org/1999/xlink"
     viewBox="0 0 633 633"
@@ -1362,8 +1364,8 @@ const N8n = ({ size = "1em", ...props }: SVGProps<SVGSVGElement> & { size?: stri
   </svg>
 );
 
-const Postman = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...props} viewBox="0 0 256 256" preserveAspectRatio="xMidYMid">
+const Postman = ({ size = "1em", ...props }: SVGProps<SVGSVGElement> & { size?: string }) => (
+  <svg width={size} height={size} {...props} viewBox="0 0 256 256" preserveAspectRatio="xMidYMid">
     <path
       d="M254.953 144.253c8.959-70.131-40.569-134.248-110.572-143.206C74.378-7.912 10.005 41.616 1.047 111.619c-8.959 70.003 40.569 134.248 110.572 143.334 70.131 8.959 134.248-40.569 143.334-110.7Z"
       fill="#FF6C37"

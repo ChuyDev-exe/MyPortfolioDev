@@ -1,13 +1,13 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import BlogLayout from '../../layouts/BlogLayout.astro';
 import NavItem from '../../components/NavItem.astro';
 
 export const getStaticPaths = (async () => {
   const Posts = await getCollection('posts')
   return Posts.map((post) => ({
-    params: { slug: post.slug},
+    params: { slug: post.id },
     props: { post: post },
   }));
 }) satisfies GetStaticPaths;
@@ -15,10 +15,11 @@ export const getStaticPaths = (async () => {
 const { post } = Astro.props;
 const frontmatter = post.data;
 
-const { Content, headings } = await post.render();
+const { Content, headings } = await render(post);
 
+type HeadingItem = { depth: number; slug: string; text: string; index: number; children: HeadingItem[] };
 
-const groupedHeadings = headings.reduce((acc, heading, index) => {
+const groupedHeadings = headings.reduce((acc: HeadingItem[], heading: { depth: number; slug: string; text: string }, index: number) => {
   if (heading.depth === 1 || heading.depth === 2) {
     acc.push({
       ...heading,
@@ -28,7 +29,8 @@ const groupedHeadings = headings.reduce((acc, heading, index) => {
   } else if (acc.length > 0) {
     acc[acc.length - 1].children.push({
       ...heading,
-      index: index + 1
+      index: index + 1,
+      children: []
     });
   }
   return acc;

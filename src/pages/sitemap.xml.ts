@@ -18,7 +18,7 @@ export const GET: APIRoute = async () => {
     { url: '/DevBlog', priority: '0.8', changefreq: 'weekly' },
     { url: '/Blog/Posts', priority: '0.7', changefreq: 'weekly' },
     ...allPosts.map((post) => ({
-      url: `/Blog/${post.slug}`,
+      url: `/Blog/${post.id}`,
       priority: '0.6',
       changefreq: 'monthly',
       lastmod: post.data.date.toISOString().split('T')[0]
