@@ -41,7 +41,7 @@ concurrency:
   cancel-in-progress: false   # never cancel a running prod deploy
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22.12.0"
 
 jobs:
   # ── 1. Build ───────────────────────────────────────────────
