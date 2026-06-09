@@ -10,7 +10,7 @@ import {
   TypeScript, 
   Qt, 
   Figma,
-JavaScript, Firefox, Chromium
+JavaScript, Firefox, Chromium, Java,SpringBoot, RaspberryPI, Espressif, ST
 } from '../Tools/Icons';
 
 interface Props {
@@ -87,14 +87,19 @@ const { imgsource, Name, Tools, Description, PrevLink, GitLink, Type, FigmaLink 
             {Tool === 'Javascript' && <JavaScript size='1.2em'/>}
             {Tool === 'Firefox' && <Firefox size='1.2em'/>}
             {Tool === 'Chromium' && <Chromium size='1.2em'/>}
+            {Tool === 'Java' && <Java size='1.2em'/>}
+            {Tool === 'SpringBoot' && <SpringBoot size='1.2em'/>}
+            {Tool === 'RaspberryPI' && <RaspberryPI size='1.2em'/>}
+            {Tool === 'Espressif' && <Espressif size='1.2em'/>}
+            {Tool === 'ST' && <ST size='1.2em'/>}
         </div>
       ))}
     </div>
 
     <!-- Action Buttons -->
     <div class="flex gap-3 mt-2">
-      {PrevLink && (
-        <a 
+      {PrevLink ? (
+        <a
           href={PrevLink}
           target="_blank"
           rel="noopener noreferrer"
@@ -104,6 +109,17 @@ const { imgsource, Name, Tools, Description, PrevLink, GitLink, Type, FigmaLink 
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
+        </a>
+      ) : (
+        <a
+          href="mailto:Jvelez13Soto@outlook.com?subject=Demo%20Request%3A%20{Name}&body=Hi%20Jesus%2C%20I%27d%20love%20to%20see%20a%20demo%20of%20{Name}."
+          class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-white/10 hover:border-[#51E4B8]/40 text-gray-500 hover:text-[#51E4B8] font-medium transition-all duration-300 group/btn"
+          title="Request a demo"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 shrink-0">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+          </svg>
+          <span class="text-sm">Request Demo</span>
         </a>
       )}
       

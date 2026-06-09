@@ -6,68 +6,99 @@ const description = "Jesus Velez Soto - Desarrollador Full-Stack con experiencia
 const keywords = "Jesus Velez, sobre Jesus Velez, biografía Jesus Velez, desarrollador full-stack, jesusvelez.xyz, experiencia profesional, React developer, Node.js developer";
 ---
 
-<Layout 
+<Layout
 	title={title}
 	description={description}
 	keywords={keywords}
 >
-	<main class="max-w-4xl mx-auto px-6 py-16 text-white">
+	<!-- Ambient background -->
+	<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+		<div class="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#51E4B8]/5 blur-[140px]"></div>
+		<div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#21554E]/8 blur-[120px]"></div>
+	</div>
+
+	<main class="max-w-4xl mx-auto px-6 py-16 text-white w-full">
 		<article>
-			<header class="text-center mb-16">
-				<h1 class="text-5xl md:text-7xl font-bold mb-6">
-					Sobre <span class="text-[#51E4B8]">Jesus Velez</span>
+			<header class="text-center mb-20">
+				<p class="text-xs uppercase tracking-[0.25em] text-[#51E4B8] mb-4 font-medium">Sobre mí</p>
+				<h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+					Jesus <span class="text-[#51E4B8]">Velez</span>
 				</h1>
-				<p class="text-xl text-gray-300 max-w-3xl mx-auto">
-					Desarrollador Full-Stack apasionado por crear soluciones innovadoras que combinan desarrollo web moderno con sistemas embebidos.
+				<p class="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+					Desarrollador Full-Stack apasionado por crear soluciones que combinan desarrollo web moderno con sistemas embebidos.
 				</p>
 			</header>
 
-			<section class="mb-16">
-				<h2 class="text-3xl font-bold mb-8 text-[#51E4B8]">Mi Historia</h2>
-				<div class="prose prose-lg prose-invert max-w-none">
+			<section class="mb-20">
+				<h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+					<span class="h-px flex-1 bg-white/10"></span>
+					<span class="text-white">Mi Historia</span>
+					<span class="h-px flex-1 bg-white/10"></span>
+				</h2>
+				<div class="space-y-4 text-gray-400 leading-relaxed">
 					<p>
-						Soy <strong>Jesus Velez Soto</strong>, un desarrollador Full-Stack con pasión por la tecnología y la innovación. Mi experiencia abarca desde el desarrollo de aplicaciones web modernas hasta la programación de microcontroladores y sistemas embebidos.
+						Soy <strong class="text-white">Jesus Velez Soto</strong>, un desarrollador Full-Stack con pasión por la tecnología y la innovación. Mi experiencia abarca desde el desarrollo de aplicaciones web modernas hasta la programación de microcontroladores y sistemas embebidos.
 					</p>
 					<p>
-						En <strong>jesusvelez.xyz</strong> comparto mi trabajo, proyectos y conocimientos adquiridos a lo largo de mi carrera como desarrollador. Mi enfoque se centra en crear soluciones eficientes y escalables que resuelvan problemas reales.
+						En <strong class="text-[#51E4B8]">jesusvelez.xyz</strong> comparto mi trabajo, proyectos y conocimientos adquiridos a lo largo de mi carrera. Mi enfoque se centra en crear soluciones eficientes y escalables que resuelvan problemas reales.
 					</p>
 				</div>
 			</section>
 
-			<section class="mb-16">
-				<h2 class="text-3xl font-bold mb-8 text-[#51E4B8]">Especialidades</h2>
-				<div class="grid md:grid-cols-2 gap-8">
-					<div class="bg-gray-800/50 p-6 rounded-lg">
-						<h3 class="text-xl font-semibold mb-4">Frontend Development</h3>
-						<ul class="space-y-2 text-gray-300">
-							<li>React & Next.js</li>
-							<li>Angular & TypeScript</li>
-							<li>Responsive Design</li>
-							<li>Modern CSS & Tailwind</li>
-						</ul>
-					</div>
-					<div class="bg-gray-800/50 p-6 rounded-lg">
-						<h3 class="text-xl font-semibold mb-4">Backend Development</h3>
-						<ul class="space-y-2 text-gray-300">
-							<li>Node.js & Express</li>
-							<li>API Development</li>
-							<li>Database Design</li>
-							<li>Cloud Services</li>
-						</ul>
-					</div>
+			<section class="mb-20">
+				<h2 class="text-2xl font-bold mb-8 flex items-center gap-3">
+					<span class="h-px flex-1 bg-white/10"></span>
+					<span class="text-white">Especialidades</span>
+					<span class="h-px flex-1 bg-white/10"></span>
+				</h2>
+				<div class="grid md:grid-cols-2 gap-6">
+					{[
+						{
+							title: "Frontend Development",
+							items: ["React & Next.js", "Angular & TypeScript", "Responsive Design", "Astro & Modern CSS"]
+						},
+						{
+							title: "Backend Development",
+							items: ["Node.js & Spring Boot", "REST & GraphQL APIs", "MySQL · Redis · MongoDB", "Docker & Cloud (AWS)"]
+						},
+						{
+							title: "Embedded Systems",
+							items: ["ESP32, STM32, NXP, AVR", "Zephyr RTOS & FreeRTOS", "Linux embebido (Yocto)", "LVGL & Qt para pantallas"]
+						},
+						{
+							title: "DevOps & Tooling",
+							items: ["CI/CD con GitHub Actions", "Nginx · Netlify · AWS EC2", "Shopify & WordPress", "Figma & Diseño UI"]
+						}
+					].map(({ title, items }) => (
+						<div class="group relative rounded-2xl border border-white/10 hover:border-[#51E4B8]/30 bg-white/[0.02] hover:bg-white/[0.04] p-6 transition-all duration-300">
+							<div class="absolute top-0 left-6 h-px w-12 bg-gradient-to-r from-[#51E4B8] to-transparent"></div>
+							<h3 class="text-base font-semibold mb-4 text-white group-hover:text-[#51E4B8] transition-colors duration-300">{title}</h3>
+							<ul class="space-y-2">
+								{items.map((item) => (
+									<li class="flex items-center gap-2 text-sm text-gray-400">
+										<span class="text-[#51E4B8] text-xs select-none">▸</span>
+										{item}
+									</li>
+								))}
+							</ul>
+						</div>
+					))}
 				</div>
 			</section>
 
-			<section class="text-center">
-				<h2 class="text-3xl font-bold mb-8 text-[#51E4B8]">¿Hablamos?</h2>
-				<p class="text-xl text-gray-300 mb-8">
-					Estoy siempre abierto a nuevos proyectos y colaboraciones.
+			<section class="text-center py-16 rounded-2xl border border-white/10 bg-white/[0.02]">
+				<h2 class="text-3xl font-bold mb-4">¿Hablamos?</h2>
+				<p class="text-gray-400 mb-8 max-w-md mx-auto">
+					Siempre abierto a nuevos proyectos, colaboraciones y oportunidades.
 				</p>
-				<a 
-					href="mailto:jesus@jesusvelez.xyz" 
-					class="inline-flex items-center gap-3 px-8 py-4 bg-[#51E4B8] text-black rounded-lg font-semibold hover:bg-[#45d4a8] transition-colors"
+				<a
+					href="mailto:jesus@jesusvelez.xyz"
+					class="inline-flex items-center gap-3 px-8 py-3.5 bg-[#51E4B8] hover:bg-[#45d4a8] text-[#050d15] rounded-xl font-semibold transition-all duration-300 hover:shadow-[0_0_30px_-5px_rgba(81,228,184,0.5)] hover:-translate-y-0.5"
 				>
-					Contactar a Jesus Velez
+					Contactar
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+					</svg>
 				</a>
 			</section>
 		</article>

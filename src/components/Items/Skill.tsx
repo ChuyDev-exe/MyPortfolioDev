@@ -1,6 +1,5 @@
 import { useState, type ReactElement } from "react"
 import { 
-  Github,
   TailwindCSS, 
   AWS, 
   Nextjs, 
@@ -10,20 +9,14 @@ import {
   RaspberryPI, 
   Qt, 
   Docker, 
-  Android, 
   LVGL,
   Figma,
-  Markdown,
-  Flutter,
   Microchip,
   ST,
   Espressif,
-  CSharp,
   JavaScript,
   GraphQL,
   Bash,
-  Windows,
-  Apple,
   ATMEL,
   NXP,
   Texas,
@@ -36,10 +29,16 @@ import {
   Angular,
   Java,
   Go,
-  Redis
+  Redis,
+  Terraform,
+  Cloudflare,
+  CloudflareWorkers,
+  TanStack,
+  Postman,
+  N8n
 } from '../Tools/Icons';
 
-type Tab = "Microcontrollers" | "Languages"| "Frameworks" | "Tools"
+type Tab = "Hardware" | "Languages"| "Frameworks" | "Tools"
 
 interface TabItem {
   id: Tab
@@ -52,7 +51,7 @@ interface ContentItem {
 }
 
 const tabs: TabItem[] = [
-  { id: "Microcontrollers", label: "Microcontrollers" },
+  { id: "Hardware", label: "Hardware" },
   { id: "Languages", label: "Languages" },
   { id: "Frameworks", label: "Frameworks" },
   { id: "Tools", label: "Tools" },
@@ -67,6 +66,7 @@ const tabContent: Record<Tab, ContentItem[]> = {
     { name: "SpringBoot", icon: <SpringBoot size='100%' /> },
     { name: "Next JS", icon: <Nextjs size='100%' /> },
     { name: "Astro", icon: <AstroI size='100%' /> },
+    { name: "TanStack", icon: <TanStack size='100%' /> },
   ],
   Languages: [
     { name: "C++", icon: <Cpp size='100%' /> },
@@ -74,11 +74,9 @@ const tabContent: Record<Tab, ContentItem[]> = {
     { name: "Java", icon: <Java width='100%' height='100%' /> },
     { name: "Javascript", icon: <JavaScript size='100%' /> },
     { name: "TypeScript", icon: <TypeScript size='100%' /> },
-    { name: "Flutter", icon: <Flutter size='100%' /> },
-    { name: ".Net", icon: <CSharp size='100%' /> },
     { name: "Go", icon: <Go size='100%' /> },
   ],
-  Microcontrollers: [
+  Hardware: [
     { name: "Espressif", icon: <Espressif size='100%' /> },
     { name: "STMicroelectronics", icon: <ST size='100%' /> },
     { name: "NXP", icon: <NXP width="100%" height="100%" /> },
@@ -90,9 +88,7 @@ const tabContent: Record<Tab, ContentItem[]> = {
   Tools: [
     { name: "Tailwind CSS", icon: <TailwindCSS size='100%' /> },
     { name: "Bash", icon: <Bash size='100%' /> },
-    { name: "Markdown", icon: <Markdown size='100%' /> },
     { name: "Docker", icon: <Docker size='100%' /> },
-    { name: "Github", icon: <Github size='100%' /> },
     { name: "GraphQL", icon: <GraphQL size='100%' /> },
     { name: "Wordpress", icon: <WordPress size='100%' /> },
     { name: "Nginx", icon: <Nginx size='100%' /> },
@@ -100,9 +96,11 @@ const tabContent: Record<Tab, ContentItem[]> = {
     { name: "Redis", icon: <Redis size='100%' /> },
     { name: "AWS", icon: <AWS size='100%' /> },
     { name: "Figma", icon: <Figma size='100%' /> },
-    { name: "Android", icon: <Android size='100%' /> },
-    { name: "MacOS", icon: <Apple size='100%' /> },
-    { name: "Windows", icon: <Windows size='100%' /> },
+    { name: "Terraform", icon: <Terraform size='100%' /> },
+    { name: "Cloudflare", icon: <Cloudflare size='100%' /> },
+    { name: "Cloudflare Workers", icon: <CloudflareWorkers size='100%' /> },
+    { name: "n8n", icon: <N8n size='100%' /> },
+    { name: "Postman", icon: <Postman size='100%' /> },
   ]
 }
 

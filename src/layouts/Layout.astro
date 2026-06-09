@@ -9,8 +9,8 @@ interface Props {
 }
 
 const currentYear = new Date().getFullYear();
-const { 
-	title, 
+const {
+	title,
 	description = "Jesus Velez - Full-Stack Developer especializado en desarrollo web moderno, microcontroladores y sistemas embebidos. Sitio oficial de Jesus Velez Soto (jesusvelez.xyz) con portfolio y proyectos en React, Next.js, Node.js, ESP32 y más.",
 	image = "/og-image.jpg",
 	keywords = "Jesus Velez, Jesus Velez Soto, jesusvelez.xyz, desarrollador full-stack, programador web, microcontroladores, sistemas embebidos, React, Next.js, Node.js, ESP32, JavaScript, TypeScript, portfolio Jesus Velez",
@@ -35,7 +35,7 @@ import "@fontsource-variable/onest";
 		<meta name="robots" content="index, follow" />
 		<meta name="language" content="es" />
 		<meta name="theme-color" content="#51E4B8" />
-		
+
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content={url} />
@@ -44,7 +44,7 @@ import "@fontsource-variable/onest";
 		<meta property="og:image" content={new URL(image, Astro.url).href} />
 		<meta property="og:site_name" content="Jesus Velez Soto - Portfolio" />
 		<meta property="og:locale" content="es_ES" />
-		
+
 		<!-- Twitter -->
 		<meta property="twitter:card" content="summary_large_image" />
 		<meta property="twitter:url" content={url} />
@@ -52,20 +52,20 @@ import "@fontsource-variable/onest";
 		<meta property="twitter:description" content={description} />
 		<meta property="twitter:image" content={new URL(image, Astro.url).href} />
 		<meta name="twitter:creator" content="@ChuyDev" />
-		
+
 		<!-- Canonical URL -->
 		<link rel="canonical" href={url} />
-		
+
 		<!-- Favicons -->
 		<link rel="icon" type="image/x-icon" href="/Logo.ico" />
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
 		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 		<link rel="manifest" href="/site.webmanifest" />
-		
+
 		<!-- Generator -->
 		<meta name="generator" content={Astro.generator} />
-		
+
 		<!-- Preload critical fonts -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -75,7 +75,7 @@ import "@fontsource-variable/onest";
 			media="print"
 			onload="this.media='all'"
 		/>
-		
+
 		<!-- JSON-LD Schema Markup -->
 		<script type="application/ld+json" is:inline>
 		{
@@ -125,61 +125,62 @@ import "@fontsource-variable/onest";
 		</script>
 	</head>
 	<body>
-		<div class=" flex flex-col w-full justify-center items-center">
+		<div class="flex flex-col w-full justify-center items-center">
 			<slot />
 		</div>
-		<footer
-			class="py-[5rem] w-full items-center gap-10 flex-col flex md:justify-between mt-20 justify-center max-sm:gap-10 text-slate-50 max-sm:px-3"
-		>
-			<div class="">
-				<h1 class="text-xs md:text-md">
-					Designed & Developed by
-				</h1>
-				<h1 class="text-xl md:text-4xl ">
-					Jesus Velez Soto 🤟🏻 {currentYear}
-				</h1>
-			</div>
-			<div class="flex gap-12 md:gap-10 max-sm:gap-10 max-sm:wrap max-sm:flex-col">
-				<a
-					href="mailto:jesus@jesusvelez.xyz"
-					class="cursor-pointer text-lg relative px-2 flex justify-center items-center hover:text-[#51E4B8]
-				before:content-[''] before:absolute before:top-[125%] before:left-1/2
-				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
-				hover:before:bg-[#51E4B8] hover:before:w-[120%] before:transition-all before:duration-300 before:ease-in-out"
-				>
-					EMAIL
-				</a>
 
-				<a
-					href="https://codepen.io/chuydev-exe"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="cursor-pointer text-lg relative px-2 flex justify-center items-center hover:text-[#51E4B8]
-				before:content-[''] before:absolute before:top-[125%] before:left-1/2
-				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
-				hover:before:bg-[#51E4B8] hover:before:w-[120%] before:transition-all before:duration-300 before:ease-in-out"
-					>CODEPEN</a
-				>
-				<a
-					href="https://github.com/ChuyDev-exe"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="cursor-pointer text-lg relative px-2 flex justify-center items-center hover:text-[#51E4B8]
-				before:content-[''] before:absolute before:top-[125%] before:left-1/2
-				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
-				hover:before:bg-[#51E4B8] hover:before:w-[120%] before:transition-all before:duration-300 before:ease-in-out"
-					>GITHUB</a
-				>
-				<a
-					href="https://www.linkedin.com/in/jesus-velez-soto-28ab11156/"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="cursor-pointer text-lg relative px-2 flex justify-center items-center hover:text-[#51E4B8]
-				before:content-[''] before:absolute before:top-[125%] before:left-1/2
-				before:-translate-x-1/2 before:w-[30%] before:h-[2px] before:bg-transparent
-				hover:before:bg-[#51E4B8] hover:before:w-[120%] before:transition-all before:duration-300 before:ease-in-out"
-					>LINKEDIN</a
-				>
+		<footer class="w-full mt-20 text-slate-50">
+			<!-- Gradient divider -->
+			<div class="h-px w-full bg-gradient-to-r from-transparent via-[#51E4B8]/40 to-transparent"></div>
+
+			<div class="max-w-5xl mx-auto px-6 py-16 flex flex-col items-center gap-10">
+				<!-- Name & tagline -->
+				<div class="text-center">
+					<p class="text-xs uppercase tracking-[0.2em] text-gray-500 mb-2">Designed & Developed by</p>
+					<h2 class="text-2xl md:text-4xl font-semibold tracking-tight">
+						Jesus Velez Soto
+					</h2>
+					<p class="text-sm text-gray-500 mt-1">Full-Stack & Embedded Developer · {currentYear}</p>
+				</div>
+
+				<!-- Links -->
+				<nav class="flex flex-wrap justify-center gap-8 md:gap-10" aria-label="Footer links">
+					<a
+						href="mailto:jesus@jesusvelez.xyz"
+						class="text-sm font-medium text-gray-400 hover:text-[#51E4B8] transition-colors duration-300 tracking-wide"
+					>
+						Email
+					</a>
+					<a
+						href="https://github.com/ChuyDev-exe"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-sm font-medium text-gray-400 hover:text-[#51E4B8] transition-colors duration-300 tracking-wide"
+					>
+						GitHub
+					</a>
+					<a
+						href="https://www.linkedin.com/in/jesus-velez-soto-28ab11156/"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-sm font-medium text-gray-400 hover:text-[#51E4B8] transition-colors duration-300 tracking-wide"
+					>
+						LinkedIn
+					</a>
+					<a
+						href="https://codepen.io/chuydev-exe"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-sm font-medium text-gray-400 hover:text-[#51E4B8] transition-colors duration-300 tracking-wide"
+					>
+						CodePen
+					</a>
+				</nav>
+
+				<!-- Bottom note -->
+				<p class="text-xs text-gray-600 text-center">
+					Built with <span class="text-[#51E4B8]">Astro</span> · Deployed on Netlify
+				</p>
 			</div>
 		</footer>
 	</body>

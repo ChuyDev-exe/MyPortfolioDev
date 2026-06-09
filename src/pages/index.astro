@@ -10,7 +10,7 @@ import TabsComponent from "../components/Items/Skill";
 const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 ---
 
-<Layout 
+<Layout
 	title="Jesus Velez | Desarrollador Full-Stack | jesusvelez.xyz"
 	description="Jesus Velez - Desarrollador Full-Stack especializado en React, Next.js, Node.js y sistemas embebidos. Portfolio oficial de Jesus Velez Soto con proyectos innovadores en desarrollo web y microcontroladores."
 	keywords="Jesus Velez, Jesus Velez Soto, jesusvelez.xyz, desarrollador full-stack, programador, React, Next.js, Node.js, sistemas embebidos, microcontroladores, ESP32, portfolio Jesus Velez, desarrollador web Jesus Velez"
@@ -26,7 +26,7 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 				<NavItem title="About" href="/about" />
 				<NavItem title="Experience" href="#Experiencia" />
 				<NavItem title="Projects" href="#Projects" />
-				<NavItem title="Blog" href="/DevBlog" /> 
+				<NavItem title="Blog" href="/DevBlog" />
 			</nav>
 
 			<!-- Mobile Navigation Button -->
@@ -53,41 +53,72 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 					<NavItem title="About" href="/about" class="text-3xl" />
 					<NavItem title="Experience" href="#Experiencia" class="text-3xl" />
 					<NavItem title="Projects" href="#Projects" class="text-3xl" />
-					<NavItem title="Blog" href="/DevBlog" class="text-3xl" /> 
+					<NavItem title="Blog" href="/DevBlog" class="text-3xl" />
 				</nav>
+			</div>
+
+			<!-- Ambient background orbs -->
+			<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+				<div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#51E4B8]/5 blur-[140px]"></div>
+				<div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#21554E]/8 blur-[120px]"></div>
+				<div class="absolute top-[40%] left-[50%] w-[30%] h-[30%] rounded-full bg-[#51E4B8]/3 blur-[100px]"></div>
 			</div>
 
 			<Logo />
 
+			<!-- Badge "Open to Work" -->
 			<div class="flex items-center w-full justify-center mb-10">
 				<span class="relative inline-flex overflow-hidden rounded-full p-px">
 					<span class="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#51E4B8_0%,#21554E_50%,#51E4B8_100%)]" />
 					<a
 						href="https://www.linkedin.com/in/jesus-velez-soto-28ab11156/"
-						class="inline-flex items-center justify-center w-full px-3 py-1 text-lg text-green-800 bg-green-100 rounded-full cursor-pointer dark:bg-gray-800 dark:text-white/80 backdrop-blur-3xl whitespace-nowrap"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="inline-flex items-center justify-center gap-2 w-full px-4 py-1.5 text-sm font-medium text-[#51E4B8] bg-[#050d15] rounded-full cursor-pointer backdrop-blur-3xl whitespace-nowrap hover:bg-[#0a1f18] transition-colors"
 					>
+						<span class="relative flex h-2 w-2">
+							<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#51E4B8] opacity-75"></span>
+							<span class="relative inline-flex rounded-full h-2 w-2 bg-[#51E4B8]"></span>
+						</span>
 						Open to Work
 					</a>
 				</span>
 			</div>
 
-			<section class="flex items-center w-full justify-center mb-[100px]">
-				<p class="text-3xl max-sm:text-base text-white mt-10 text-wrap w-[90%] md:w-[40%] text-center">
-					3 años de experiencia como<br>
-					<span class="text-[#51E4B8]">
-						{" "}
-						Ingeniero de Software.
-						<br>
-						Freelancee
-					</span>
-					<br>
-					 🇲🇽 Especializado en Aplicaciones Web
-					y Dispositivos Embebidos con Linux.
-				</p>
+			<!-- Hero text -->
+			<section class="flex flex-col items-center w-full justify-center mb-[100px] px-4 gap-8">
+				<div class="text-center max-w-2xl">
+					<p class="text-4xl max-sm:text-2xl font-semibold text-white leading-tight tracking-tight">
+						<span class="block text-[#51E4B8]">Full-Stack & Embedded Engineer</span>
+					</p>
+					<p class="text-base md:text-lg text-gray-400 mt-2 leading-relaxed">
+						3+ años construyendo aplicaciones web modernas y dispositivos embebidos con Linux.
+						<span class="text-gray-300"> Freelance · 🇲🇽 México</span>
+					</p>
+				</div>
+
+				<!-- CTA buttons -->
+				<div class="flex flex-wrap gap-4 justify-center mt-2">
+					<a
+						href="#Projects"
+						class="inline-flex items-center gap-2 px-6 py-3 bg-[#51E4B8] hover:bg-[#45d4a8] text-[#050d15] font-semibold rounded-xl transition-all duration-300 hover:shadow-[0_0_30px_-5px_rgba(81,228,184,0.5)] hover:-translate-y-0.5"
+					>
+						Ver Proyectos
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+						</svg>
+					</a>
+					<a
+						href="mailto:jesus@jesusvelez.xyz"
+						class="inline-flex items-center gap-2 px-6 py-3 border border-white/20 hover:border-[#51E4B8]/50 text-white font-medium rounded-xl transition-all duration-300 hover:bg-white/5 hover:-translate-y-0.5"
+					>
+						Contacto
+					</a>
+				</div>
 			</section>
 
 			<div
-				class="w-full flex items-center justify-center flex-col mt-[100px]  "
+				class="w-full flex items-center justify-center flex-col mt-[100px]"
 				id="Experiencia"
 			>
 				<h1 class="max-sm:text-2xl text-5xl font-semibold text-white my-5">
@@ -97,7 +128,7 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 			</div>
 
 			<div
-				class="w-full flex items-center justify-center flex-col mt-[200px] "
+				class="w-full flex items-center justify-center flex-col mt-[200px]"
 				id="Skills"
 			>
 				<h1 class="max-sm:text-2xl text-5xl font-semibold text-white my-5">
@@ -107,7 +138,7 @@ const subdomain = Astro.locals.subdomain?.toLowerCase() || '';
 			</div>
 
 			<div
-				class="w-full flex items-center justify-center flex-col mt-[200px] "
+				class="w-full flex items-center justify-center flex-col mt-[200px]"
 				id="Projects"
 			>
 				<h1 class="max-sm:text-2xl text-5xl font-semibold text-white my-5">
@@ -135,14 +166,14 @@ window.addEventListener("scroll", () => {
         "top-10",
         "py-2",
         "px-10",
-		"backdrop-blur-sm",
+        "backdrop-blur-sm",
         "w-fit"
       );
     } else {
       nav.classList.add("mt-24");
       nav.classList.remove(
         "border",
-		"backdrop-blur-sm",
+        "backdrop-blur-sm",
         "rounded-full",
         "border-white",
         "sticky",

@@ -19,6 +19,7 @@
       <h1 class="glitch" data-text="s">s</h1>
     </div>
   </div>
+  <p class="subtitle my-3">Full-Stack &amp; Embedded Developer</p>
 </section>
 
 <style>
@@ -112,64 +113,78 @@
     animation: anim2 1s infinite linear alternate-reverse;
   }
 
-
-
   /* Tamaño base */
-.glitch {
-  font-family: "Allan", cursive;
-  color: #fff;
-  position: relative;
-  margin: 0;
-  font-size: clamp(100px, 12vw, 150px); /* min, preferido, max */
-}
-
-/* Márgenes generales */
-.Nom:nth-child(1) {
-  margin-left: 60px;
-}
-.Nom:nth-child(2) {
-  margin-top: -55px;
-}
-
-/* Dispositivos pequeños */
-@media (max-width: 640px) {
   .glitch {
-    font-size: 90px;
+    font-family: "Allan", cursive;
+    color: #fff;
+    position: relative;
+    margin: 0;
+    font-size: clamp(100px, 12vw, 150px);
   }
+
+  /* Márgenes generales */
   .Nom:nth-child(1) {
-    margin-left: 40px;
+    margin-left: 60px;
   }
   .Nom:nth-child(2) {
-    margin-top: -40px;
+    margin-top: -55px;
   }
-}
 
-/* Tablets */
-@media (min-width: 641px) and (max-width: 991px) {
-  .glitch {
-    font-size: 110px;
+  .subtitle {
+    font-family: "Onest Variable", system-ui, sans-serif;
+    color: #6b7280;
+    font-size: clamp(0.7rem, 1.5vw, 0.9rem);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 1.5rem;
+    opacity: 0;
+    animation: fadeSubtitle 1s ease-out 0.4s forwards;
   }
-  .Nom:nth-child(1) {
-    margin-left: 75px;
-  }
-  .Nom:nth-child(2) {
-    margin-top: -60px;
-  }
-}
 
-/* Escritorio */
-@media (min-width: 992px) {
-  .glitch {
-    font-size: 150px;
+  @keyframes fadeSubtitle {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .Nom:nth-child(1) {
-    margin-left: 100px;
-  }
-  .Nom:nth-child(2) {
-    margin-top: -85px;
-  }
-}
 
+  /* Dispositivos pequeños */
+  @media (max-width: 640px) {
+    .glitch {
+      font-size: 90px;
+    }
+    .Nom:nth-child(1) {
+      margin-left: 40px;
+    }
+    .Nom:nth-child(2) {
+      margin-top: -40px;
+    }
+  }
+
+  /* Tablets */
+  @media (min-width: 641px) and (max-width: 991px) {
+    .glitch {
+      font-size: 110px;
+    }
+    .Nom:nth-child(1) {
+      margin-left: 75px;
+    }
+    .Nom:nth-child(2) {
+      margin-top: -60px;
+    }
+  }
+
+  /* Escritorio */
+  @media (min-width: 992px) {
+    .glitch {
+      font-size: 150px;
+    }
+    .Nom:nth-child(1) {
+      margin-left: 100px;
+    }
+    .Nom:nth-child(2) {
+      margin-top: -85px;
+    }
+  }
 
   @keyframes anim1 {
     0%,
